@@ -8,8 +8,6 @@
 #include "h2o/http1.h"
 #include "lmdb.h"
 
-#define MAX_QUEUE_SIZE 1000
-
 typedef struct
 {
     size_t len;

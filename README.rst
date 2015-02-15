@@ -15,6 +15,8 @@ lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *c
 Example usage
 =============
 
+All examples use httpie.
+
 Get
 ---
 You obtain a value by GET'ng the key. In this case the key is 'x':
