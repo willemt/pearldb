@@ -1,9 +1,6 @@
 *WARNING: Experimental WIP - Don't use me in PROD*
 
 
-**lmdb + h2o = PearDB**
-
-
 What?
 =====
 PearDB is a HTTP Key-Value pair database. It uses lmdb for storing data, and h2o for HTTP.
