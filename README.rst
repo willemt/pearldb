@@ -3,7 +3,7 @@
 
 What?
 =====
-PearDB is a HTTP Key-Value pair database. It uses lmdb for storing data, and h2o for HTTP.
+PearDB is a HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `h2o <https://github.com/h2o/h2o>`_ for HTTP.
 
 Why?
 ====
@@ -12,7 +12,19 @@ lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *c
 Example usage
 =============
 
-All examples use httpie.
+All below examples use `httpie <https://github.com/jakubroztocil/httpie>`_
+
+Starting the server
+-------------------
+
+.. code-block:: bash
+
+   build/pear --daemonize
+   echo daemonizing...
+
+.. code-block:: bash
+
+   daemonizing...
 
 Get
 ---

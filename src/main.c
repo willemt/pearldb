@@ -4,9 +4,16 @@
  * found in the LICENSE file.
  */
 
+/* for daemon */
+#include <unistd.h>
+
+/* for mkdir */
+#include <sys/stat.h>
+
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
+#include "docopt.c"
 
 typedef struct
 {
@@ -313,9 +320,12 @@ fail:
     return r;
 }
 
-static void __db_create(MDB_dbi *dbi, MDB_env **env, char* name)
+static void __db_create(MDB_dbi *dbi, MDB_env **env,
+                        const char* path, const char* db_name)
 {
     int err;
+
+    err = mkdir(path, 0777);
 
     err = mdb_env_create(env);
     if (0 != err)
@@ -338,7 +348,7 @@ static void __db_create(MDB_dbi *dbi, MDB_env **env, char* name)
         abort();
     }
 
-    err = mdb_env_open(*env, "db",  MDB_WRITEMAP, 0664);
+    err = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
     if (0 != err)
     {
         perror(mdb_strerror(err));
@@ -354,7 +364,7 @@ static void __db_create(MDB_dbi *dbi, MDB_env **env, char* name)
         abort();
     }
 
-    err = mdb_dbi_open(txn, name, MDB_CREATE, dbi);
+    err = mdb_dbi_open(txn, db_name, MDB_CREATE, dbi);
     if (0 != err)
     {
         perror("can't create lmdb db");
@@ -369,16 +379,25 @@ static void __db_create(MDB_dbi *dbi, MDB_env **env, char* name)
     }
 }
 
-static void __server_new(server_t* sv)
+static void __new_server(server_t* sv, const char* db_path)
 {
-    __db_create(&sv->dbi, &sv->db_env, "store");
+    __db_create(&sv->dbi, &sv->db_env, db_path, "db");
 }
 
 int main(int argc, char **argv)
 {
-    __server_new(sv);
+    DocoptArgs args = docopt(argc, argv, 1, "0.1");
 
-    signal(SIGPIPE, SIG_IGN);
+    __new_server(sv, args.db_path ? args.db_path : "store");
+
+    if (args.daemonize)
+    {
+        int ret = daemon(1, 0);
+        if (-1 == ret)
+            abort();
+    }
+    else
+        signal(SIGPIPE, SIG_IGN);
 
     h2o_config_init(&config);
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config, "default");
