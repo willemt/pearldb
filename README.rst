@@ -12,7 +12,7 @@ lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *c
 Example usage
 =============
 
-All below examples use `httpie <https://github.com/jakubroztocil/httpie>`_
+All examples below make use of the excellent `httpie <https://github.com/jakubroztocil/httpie>`_
 
 Starting the server
 -------------------
