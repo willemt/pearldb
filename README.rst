@@ -13,6 +13,21 @@ Why?
 ====
 lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *could be really fast*.
 
+Building
+========
+
+Ubuntu
+------
+$ sudo apt-get install libuv
+$ make libh2o
+$ make
+
+OSX
+---
+$ brew install --HEAD libuv
+$ make libh2o
+$ make
+
 Example usage
 =============
 
@@ -45,7 +60,7 @@ But you get a 404 if it doesn't exist:
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/0.9.2-alpha1
+   Server: h2o/1.0.0
    Connection: close
 
 Put
@@ -61,7 +76,7 @@ We use PUT instead of POST for putting a key-value pair.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/0.9.2-alpha1
+   Server: h2o/1.0.0
    Connection: keep-alive
    content-type: text/plain; charset=utf-8
    transfer-encoding: chunked
@@ -89,7 +104,7 @@ Delete
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/0.9.2-alpha1
+   Server: h2o/1.0.0
    Connection: keep-alive
    transfer-encoding: chunked
 
@@ -104,5 +119,5 @@ Doesn't exist anymore:
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/0.9.2-alpha1
+   Server: h2o/1.0.0
    Connection: close

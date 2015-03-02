@@ -288,7 +288,7 @@ static void on_accept(uv_stream_t * listener, int status)
 
     sock = h2o_uv_socket_create((uv_stream_t*)conn, NULL, 0,
                                 (uv_close_cb)free);
-    h2o_http1_accept(&ctx, sock);
+    h2o_http1_accept(&ctx, ctx.globalconf->hosts, sock);
 }
 
 static int create_listener(void)

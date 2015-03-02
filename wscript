@@ -6,12 +6,15 @@ import os
 
 
 def options(opt):
-        opt.load('compiler_c')
+    opt.load('compiler_c')
 
 
 def configure(conf):
     conf.load('compiler_c')
     conf.load('clib')
+    if sys.platform == 'darwin':
+        conf.env.prepend_value('LINKFLAGS', ['-framework', 'CoreFoundation'])
+        conf.env.prepend_value('LINKFLAGS', ['-framework', 'CoreServices'])
 
 
 def build(bld):
