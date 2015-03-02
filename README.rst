@@ -19,13 +19,17 @@ Building
 Ubuntu
 ------
 $ sudo apt-get install libuv
+
 $ make libh2o
+
 $ make
 
 OSX
 ---
 $ brew install --HEAD libuv
+
 $ make libh2o
+
 $ make
 
 Example usage
