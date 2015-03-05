@@ -53,10 +53,10 @@ static int __put(h2o_req_t *req, kstr_t* key)
 {
     static h2o_generator_t generator = { NULL, NULL };
     MDB_txn *txn;
-    int ret;
+    int e;
 
-    ret = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
-    if (0 != ret)
+    e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+    if (0 != e)
     {
         perror("can't create transaction");
         abort();
@@ -67,15 +67,15 @@ static int __put(h2o_req_t *req, kstr_t* key)
     MDB_val v = { .mv_size = req->entity.len,
                   .mv_data = (void*)req->entity.base };
 
-    ret = mdb_put(txn, sv->dbi, &k, &v, 0);
-    if (0 != ret)
+    e = mdb_put(txn, sv->dbi, &k, &v, 0);
+    if (0 != e)
     {
         perror("mdm put failed");
         abort();
     }
 
-    ret = mdb_txn_commit(txn);
-    if (0 != ret)
+    e = mdb_txn_commit(txn);
+    if (0 != e)
     {
         perror("can't commit transaction");
         abort();
@@ -106,10 +106,10 @@ static int __get(h2o_req_t *req, kstr_t* key)
     static h2o_generator_t generator = { NULL, NULL };
     h2o_iovec_t body;
     MDB_txn *txn;
-    int ret;
+    int e;
 
-    ret = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
-    if (0 != ret)
+    e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+    if (0 != e)
     {
         perror("can't create transaction");
         abort();
@@ -119,14 +119,14 @@ static int __get(h2o_req_t *req, kstr_t* key)
                   .mv_data = key->s };
     MDB_val v;
 
-    ret = mdb_get(txn, sv->dbi, &k, &v);
-    switch (ret)
+    e = mdb_get(txn, sv->dbi, &k, &v);
+    switch (e)
     {
     case 0:
         break;
     case MDB_NOTFOUND:
-        ret = mdb_txn_commit(txn);
-        if (0 != ret)
+        e = mdb_txn_commit(txn);
+        if (0 != e)
         {
             perror("can't commit transaction");
             abort();
@@ -141,14 +141,14 @@ static int __get(h2o_req_t *req, kstr_t* key)
         goto fail;
     }
 
-    if (0 != ret)
+    if (0 != e)
     {
         perror("mdm get failed");
         abort();
     }
 
-    ret = mdb_txn_commit(txn);
-    if (0 != ret)
+    e = mdb_txn_commit(txn);
+    if (0 != e)
     {
         perror("can't commit transaction");
         abort();
@@ -178,14 +178,14 @@ static int __delete(h2o_req_t *req, kstr_t* key)
 {
     static h2o_generator_t generator = { NULL, NULL };
     h2o_iovec_t body;
-    int ret;
+    int e;
 
     body.len = 0;
 
     MDB_txn *txn;
 
-    ret = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
-    if (0 != ret)
+    e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+    if (0 != e)
     {
         perror("can't create transaction");
         abort();
@@ -194,14 +194,14 @@ static int __delete(h2o_req_t *req, kstr_t* key)
     MDB_val k = { .mv_size = key->len,
                   .mv_data = key->s };
 
-    ret = mdb_del(txn, sv->dbi, &k, NULL);
-    switch (ret)
+    e = mdb_del(txn, sv->dbi, &k, NULL);
+    switch (e)
     {
     case 0:
         break;
     case MDB_NOTFOUND:
-        ret = mdb_txn_commit(txn);
-        if (0 != ret)
+        e = mdb_txn_commit(txn);
+        if (0 != e)
         {
             perror("can't commit transaction");
             abort();
@@ -216,8 +216,8 @@ static int __delete(h2o_req_t *req, kstr_t* key)
         goto fail;
     }
 
-    ret = mdb_txn_commit(txn);
-    if (0 != ret)
+    e = mdb_txn_commit(txn);
+    if (0 != e)
     {
         perror("can't commit transaction");
         abort();
@@ -295,82 +295,82 @@ static int create_listener(void)
 {
     static uv_tcp_t listener;
     struct sockaddr_in addr;
-    int r;
+    int e;
 
     uv_tcp_init(ctx.loop, &listener);
     uv_ip4_addr("127.0.0.1", 8888, &addr);
-    r = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
-    if (r != 0)
+    e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
+    if (e != 0)
     {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(r));
+        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
         goto fail;
     }
-    r = uv_listen((uv_stream_t*)&listener, 128, on_accept);
-    if (r != 0)
+    e = uv_listen((uv_stream_t*)&listener, 128, on_accept);
+    if (e != 0)
     {
-        fprintf(stderr, "uv_listen:%s\n", uv_strerror(r));
+        fprintf(stderr, "uv_listen:%s\n", uv_strerror(e));
         goto fail;
     }
 
     return 0;
 fail:
     uv_close((uv_handle_t*)&listener, NULL);
-    return r;
+    return e;
 }
 
 static void __db_create(MDB_dbi *dbi, MDB_env **env,
                         const char* path, const char* db_name)
 {
-    int err;
+    int e;
 
-    err = mkdir(path, 0777);
+    e = mkdir(path, 0777);
 
-    err = mdb_env_create(env);
-    if (0 != err)
+    e = mdb_env_create(env);
+    if (0 != e)
     {
         perror("can't create lmdb env");
         abort();
     }
 
-    err = mdb_env_set_mapsize(*env, 1048576000);
-    if (0 != err)
+    e = mdb_env_set_mapsize(*env, 1048576000);
+    if (0 != e)
     {
         perror("can't set map size");
         abort();
     }
 
-    err = mdb_env_set_maxdbs(*env, 1024);
-    if (0 != err)
+    e = mdb_env_set_maxdbs(*env, 1024);
+    if (0 != e)
     {
-        perror(mdb_strerror(err));
+        perror(mdb_strerror(e));
         abort();
     }
 
-    err = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
-    if (0 != err)
+    e = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
+    if (0 != e)
     {
-        perror(mdb_strerror(err));
+        perror(mdb_strerror(e));
         abort();
     }
 
     MDB_txn *txn;
 
-    err = mdb_txn_begin(*env, NULL, 0, &txn);
-    if (0 != err)
+    e = mdb_txn_begin(*env, NULL, 0, &txn);
+    if (0 != e)
     {
         perror("can't create transaction");
         abort();
     }
 
-    err = mdb_dbi_open(txn, db_name, MDB_CREATE, dbi);
-    if (0 != err)
+    e = mdb_dbi_open(txn, db_name, MDB_CREATE, dbi);
+    if (0 != e)
     {
         perror("can't create lmdb db");
         abort();
     }
 
-    err = mdb_txn_commit(txn);
-    if (0 != err)
+    e = mdb_txn_commit(txn);
+    if (0 != e)
     {
         perror("can't create transaction");
         abort();
