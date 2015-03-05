@@ -299,16 +299,14 @@ static int create_listener(void)
 
     uv_tcp_init(ctx.loop, &listener);
     uv_ip4_addr("127.0.0.1", 8888, &addr);
-    if ((r =
-             uv_tcp_bind(&listener, (struct sockaddr *)&addr,
-                         0)) != 0)
+    r = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
+    if (r != 0)
     {
         fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(r));
         goto fail;
     }
-    if ((r =
-             uv_listen((uv_stream_t*)&listener, 128,
-                       on_accept)) != 0)
+    r = uv_listen((uv_stream_t*)&listener, 128, on_accept);
+    if (r != 0)
     {
         fprintf(stderr, "uv_listen:%s\n", uv_strerror(r));
         goto fail;
