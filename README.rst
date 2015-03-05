@@ -13,21 +13,6 @@ Why?
 ====
 lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *could be really fast*.
 
-Building
-========
-
-Ubuntu
-------
-$ sudo apt-get install libuv
-$ make libh2o
-$ make
-
-OSX
----
-$ brew install --HEAD libuv
-$ make libh2o
-$ make
-
 Example usage
 =============
 
@@ -121,3 +106,22 @@ Doesn't exist anymore:
    Date: ..., ... .... ........ GMT 
    Server: h2o/1.0.0
    Connection: close
+
+Building
+========
+
+Ubuntu
+------
+$ sudo apt-get install libuv
+
+$ make libh2o
+
+$ make
+
+OSX
+---
+$ brew install --HEAD libuv
+
+$ make libh2o
+
+$ make
