@@ -1,8 +1,8 @@
 .. image:: https://img.shields.io/badge/rsttst-testable-brightgreen.svg
    :target: https://github.com/willemt/rsttst
 
-
-*WARNING: Experimental WIP - Don't use me in PROD*
+.. image:: http://badges.github.io/stability-badges/dist/experimental.svg
+   :target: http://github.com/badges/stability-badges
 
 
 What?
