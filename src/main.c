@@ -40,9 +40,9 @@ typedef struct
 server_t server;
 server_t *sv = &server;
 
-static void register_handler(h2o_hostconf_t *hostconf, const char *path, int (*on_req)(
-                                 h2o_handler_t *,
-                                 h2o_req_t *))
+static void __register_handler(h2o_hostconf_t *hostconf, const char *path, int (*on_req)(
+                                   h2o_handler_t *,
+                                   h2o_req_t *))
 {
     h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, path);
     h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
@@ -236,7 +236,7 @@ fail:
     return -1;
 }
 
-static int pear(h2o_handler_t * self, h2o_req_t * req)
+static int __pear(h2o_handler_t * self, h2o_req_t * req)
 {
     h2o_iovec_t body;
     static h2o_generator_t generator = { NULL, NULL };
@@ -269,7 +269,7 @@ fail:
 static h2o_globalconf_t config;
 static h2o_context_t ctx;
 
-static void on_accept(uv_stream_t * listener, int status)
+static void __on_accept(uv_stream_t * listener, int status)
 {
     uv_tcp_t *conn;
     h2o_socket_t *sock;
@@ -291,7 +291,7 @@ static void on_accept(uv_stream_t * listener, int status)
     h2o_http1_accept(&ctx, ctx.globalconf->hosts, sock);
 }
 
-static int create_listener(void)
+static int __create_listener(void)
 {
     static uv_tcp_t listener;
     struct sockaddr_in addr;
@@ -305,7 +305,7 @@ static int create_listener(void)
         fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
         goto fail;
     }
-    e = uv_listen((uv_stream_t*)&listener, 128, on_accept);
+    e = uv_listen((uv_stream_t*)&listener, 128, __on_accept);
     if (e != 0)
     {
         fprintf(stderr, "uv_listen:%s\n", uv_strerror(e));
@@ -399,13 +399,13 @@ int main(int argc, char **argv)
 
     h2o_config_init(&config);
     h2o_hostconf_t *hostconf = h2o_config_register_host(&config, "default");
-    register_handler(hostconf, "/", pear);
+    __register_handler(hostconf, "/", __pear);
 
     uv_loop_t loop;
     uv_loop_init(&loop);
     h2o_context_init(&ctx, &loop, &config);
 
-    if (create_listener() != 0)
+    if (__create_listener() != 0)
     {
         fprintf(stderr, "failed to listen to 127.0.0.1:8888:%s\n",
                 strerror(errno));
