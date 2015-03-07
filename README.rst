@@ -205,6 +205,131 @@ Of course, after a DELETE the key doesn't exist anymore:
    Connection: keep-alive
    content-length: 0
 
+Compare and Swap (CAS)
+----------------------
+A form of `opportunistic concurrency control <http://en.wikipedia.org/wiki/Optimistic_concurrency_control>`_ is available through `ETags <http://en.wikipedia.org/wiki/HTTP_ETag>`_.
+
+When the client provides the Prefers: ETag header on a GET request we generate an ETag. A client can then use the `If-Match <https://msdn.microsoft.com/en-us/library/dd541480.aspx>`_ header with the ETag to perform a conditional update, (ie. a CAS operation). If the ETag has changed then the PUT operation will fail. CAS operations are great because there is no locking; if a CAS operation fails for one client that means it has succeeded for another, ie. there has been progress.
+
+Imagine two clients trying to update the same key. Client 1 requests an ETag. The ETag is provided via the etag header.
+
+.. code-block:: bash
+
+   echo 'SWEET DATA' | http -h --ignore-stdin PUT 127.0.0.1/x/ > /dev/null
+   http -h --ignore-stdin GET 127.0.0.1/x/ Prefers:ETag > etag.txt
+   cat etag.txt
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   etag: ...
+   transfer-encoding: chunked
+
+If client 1 requests an ETag again, the same ETag is sent:
+
+.. code-block:: bash
+
+   http -h --ignore-stdin GET 127.0.0.1/x/ Prefers:ETag > etag2.txt
+   cat etag2.txt
+   diff <(grep etag etag.txt) <(grep etag etag2.txt)
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   etag: ...
+   transfer-encoding: chunked
+
+Client 2 does a PUT on x. This will invalidate the ETag.
+
+.. code-block:: bash
+
+   echo 'SURPRISE' | http -h PUT 127.0.0.1/x/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   transfer-encoding: chunked
+
+Client 1 uses a conditional PUT to update "x" using the If-Match tag. Because the ETag was invalidated, we don't commit, and respond with 412 Precondition Failed.
+
+.. code-block:: bash
+
+   echo 'MY NEW VALUE BASED OFF OLD VALUE' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag.txt | sed -e 's/etag: //' | tr -d '\r\n')
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 412 BAD ETAG
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   content-length: 0
+
+Once this happens we can retry the PUT after we do a new GET.
+
+.. code-block:: bash
+
+   http -h GET 127.0.0.1/x/ Prefers:ETag > etag3.txt
+   cat etag3.txt
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   etag: ...
+   transfer-encoding: chunked
+
+The PUT will succeed because the ETag is still valid.
+
+.. code-block:: bash
+
+   echo 'NEW VALUE' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   transfer-encoding: chunked
+
+However, if we use the ETag again it will fail.
+
+.. code-block:: bash
+
+   echo 'NEW VALUE2' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 412 BAD ETAG
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   content-length: 0
+
+Notes about ETags:
+
+- On reboots, PearDB loses all ETag information
+- On launch PearDB generates a random ETag prefix
+- ETags are expected to have a short life (ie. < 1 day)
+
 Shutting down
 -------------
 
@@ -218,21 +343,14 @@ Shutting down
 
    shutdown
 
+
 Building
 ========
 
-Ubuntu
-------
-$ sudo apt-get install libuv
+$ make libuv
 
 $ make libh2o
 
-$ make
-
-OSX
----
-$ brew install --HEAD libuv
-
-$ make libh2o
+$ make libck
 
 $ make

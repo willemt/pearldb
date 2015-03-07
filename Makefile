@@ -33,6 +33,16 @@ libuv:
 	cp deps/libuv/.libs/libuv.a .
 .PHONY : libuv
 
+libck:
+	if test -e deps/ck; \
+	then cd deps/ck && git pull ; \
+	else git clone http://github.com/concurrencykit/ck deps/ck; \
+	fi
+	cd deps/ck && ./configure
+	cd deps/ck && make
+	cp deps/ck/src/libck.a .
+.PHONY : libck
+
 usage.c:
 	docopt2ragel USAGE > src/usage.rl
 	ragel src/usage.rl

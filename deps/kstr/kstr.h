@@ -1,6 +1,10 @@
 #ifndef KSTR_H
 #define KSTR_H
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif /* min */
+
 typedef struct
 {
     size_t len;
@@ -15,6 +19,16 @@ typedef struct
 int kstrccmp(kstr_t* a, char* b)
 {
     return strncmp(a->s, b, a->len);
+}
+
+/**
+ * Compare kstr to a kstr
+ * @param[in] a kstr
+ * @param[in] b kstr
+ */
+int kstrcmp(kstr_t* a, kstr_t* b)
+{
+    return strncmp(a->s, b->s, min(a->len, b->len));
 }
 
 /**

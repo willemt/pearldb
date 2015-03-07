@@ -26,6 +26,7 @@
 #include "uv_multiplex.h"
 #include "batch_monitor.h"
 #include "b64.h"
+#include "ck_ht.h"
 
 #include "pear.h"
 
@@ -35,6 +36,9 @@
 
 #define UUID4_LEN 24
 #define WOULD_OVERWRITE MDB_MULTIPLE << 1
+#define ETAG_PREFIX_LEN 8
+#define ETAG_ID_LEN 20
+#define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
 
 typedef struct
 {
@@ -77,6 +81,117 @@ static int __http_success(h2o_req_t *req, int status_code)
     req->res.reason = "OK";
     h2o_start_response(req, &generator);
     h2o_send(req, &body, 1, 1);
+    return 0;
+}
+
+/**
+ * Get the ETag that the request wants us to do the If-Match on
+ */
+static h2o_iovec_t __get_if_match_etag(const h2o_req_t* req, const kstr_t* key)
+{
+    ssize_t header =
+        h2o_find_header(&req->headers, H2O_TOKEN_IF_MATCH, SIZE_MAX);
+
+    if (-1 == header)
+        return (h2o_iovec_t){.base = NULL, .len = 0 };
+
+    return req->headers.entries[header].value;
+}
+
+/*
+ * Does the client want an ETag?
+ */
+static int __prefers_etag(const h2o_req_t* req)
+{
+    ssize_t header = h2o_find_header_by_str(
+        &req->headers, "prefers", strlen("prefers"), SIZE_MAX);
+
+    if (-1 == header)
+        return 0;
+
+    if (!strncmp(req->headers.entries[header].value.base, "ETag",
+                 min(strlen("ETag"), req->headers.entries[header].value.len)))
+        return 1;
+
+    return 0;
+}
+
+/**
+ * Generate an etag
+ */
+static h2o_iovec_t __get_or_create_etag(kstr_t* key, MDB_val *val)
+{
+    int e;
+    ck_ht_hash_t hash;
+    ck_ht_entry_t entry;
+    char* etag;
+
+    ck_ht_hash(&hash, &sv->etags, key->s, key->len);
+    ck_ht_entry_key_set(&entry, key->s, key->len);
+    do
+    {
+        e = ck_ht_get_spmc(&sv->etags, hash, &entry);
+        if (0 == e)
+        {
+            uv_mutex_lock(&sv->etag_lock);
+            int num = sv->etag_num;
+            sv->etag_num++;
+            uv_mutex_unlock(&sv->etag_lock);
+
+            /* TODO: get this memory from a pool */
+            etag = malloc(ETAG_LEN);
+            snprintf(etag, ETAG_LEN + 1, "%8.8d%20.20d", sv->etag_prefix, num);
+
+            char* my_key = strndup(key->s, key->len);
+            ck_ht_entry_set(&entry, hash, my_key, key->len, etag);
+            e = ck_ht_put_spmc(&sv->etags, hash, &entry);
+            if (e != 0)
+                break;
+        }
+        else
+            break;
+    }
+    while (1);
+
+    etag = ck_ht_entry_value(&entry);
+
+    return (h2o_iovec_t) {.base = etag, .len = ETAG_LEN };
+}
+
+static char* __remove_stored_etag(const kstr_t* key)
+{
+    int e;
+    ck_ht_hash_t hash;
+    ck_ht_entry_t entry;
+
+    ck_ht_entry_key_set(&entry, key->s, key->len);
+    ck_ht_hash(&hash, &sv->etags, key->s, key->len);
+    e = ck_ht_remove_spmc(&sv->etags, hash, &entry);
+    if (1 == e)
+        return ck_ht_entry_value(&entry);
+    return NULL;
+}
+
+static int __etag_conditional_put(h2o_req_t *req, const kstr_t* key)
+{
+    h2o_iovec_t etag = __get_if_match_etag(req, key);
+    char* my_etag = __remove_stored_etag(key);
+
+    if (0 < etag.len)
+    {
+        if (!my_etag ||
+            etag.len < ETAG_LEN ||
+            0 != strncmp(my_etag, etag.base, ETAG_LEN))
+        {
+            __http_error(req, 412, "BAD ETAG");
+            return -1;
+        }
+    }
+
+    /* TODO: release memory back into a pool */
+    if (my_etag)
+        free(my_etag);
+
     return 0;
 }
 
@@ -129,6 +244,11 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 static int __put(h2o_req_t *req, kstr_t* key)
 {
     int e;
+
+    e = __etag_conditional_put(req, key);
+    if (0 != e)
+        return 0;
+
     batch_item_t item;
     item.flags = 0;
     item.key.mv_data = key->s;
@@ -136,7 +256,7 @@ static int __put(h2o_req_t *req, kstr_t* key)
     item.val.mv_data = req->entity.base;
     item.val.mv_size = req->entity.len;
     e = bmon_offer(&sv->batch, &item);
-    if (-1 == e)
+    if (0 != e)
         return __http_error(req, 400, batcher_error);
     return __http_success(req, 200);
 }
@@ -174,6 +294,14 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
     if (0 != e)
         mdb_fatal(e);
 
+    if (__prefers_etag(req))
+    {
+        h2o_iovec_t etag = __get_or_create_etag(key, &v);
+        h2o_add_header(&req->pool, &req->res.headers,
+                       H2O_TOKEN_ETAG,
+                       etag.base, etag.len);
+    }
+
     h2o_iovec_t body;
     if (return_body)
     {
@@ -185,6 +313,7 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
         body.base = "";
         body.len = 0;
     }
+
     req->res.status = 200;
     req->res.reason = "OK";
     h2o_start_response(req, &generator);
@@ -194,7 +323,7 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static int __delete(h2o_req_t *req, kstr_t* key)
+static int __delete(h2o_req_t *req, kstr_t * key)
 {
     int e;
     MDB_txn *txn;
@@ -335,6 +464,12 @@ static void __worker_start(void* uv_tcp)
         uv_run(listener->loop, UV_RUN_DEFAULT);
 }
 
+struct ck_malloc __hs_allocators = {
+    .malloc  = (void*)malloc,
+    .realloc = (void*)realloc,
+    .free    = (void*)free,
+};
+
 int main(int argc, char **argv)
 {
     int e, i;
@@ -362,6 +497,20 @@ int main(int argc, char **argv)
     }
 
     srand(time(NULL));
+
+    sv->etag_num = 0;
+    /* ETags are stored in-memory. When we boot we generate a random ETag prefix.
+     * This is done to avoid ETags issued before the reboot being mistaken for
+     * ETags after the reboot */
+    sv->etag_prefix = rand() % (int)(pow(10, ETAG_PREFIX_LEN));
+    uv_mutex_init(&sv->etag_lock);
+    e = ck_ht_init(&sv->etags, CK_HT_MODE_BYTESTRING, NULL, &__hs_allocators,
+                   128, 0);
+    if (!e)
+    {
+        printf("error\n");
+        abort();
+    }
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
               (void*)__batch_item_cmp, __batcher_commit);

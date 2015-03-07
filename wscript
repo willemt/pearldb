@@ -29,7 +29,7 @@ def build(bld):
         -Werror=pointer-to-int-cast
     """.split()
 
-    lib = ['uv', 'h2o', 'ssl', 'crypto']
+    lib = ['uv', 'h2o', 'ssl', 'crypto', 'ck']
 
     if sys.platform == 'darwin':
         cflags.extend("""
@@ -62,11 +62,15 @@ def build(bld):
         ./deps/libuv/include
         """.split()
 
+    ck_includes = """
+        ./deps/ck/include
+        """.split()
+
     bld.program(
         source="""
         src/main.c
         """.split() + bld.clib_c_files(clibs),
-        includes=['./include'] + bld.clib_h_paths(clibs) + h2o_includes + uv_includes,
+        includes=['./include'] + bld.clib_h_paths(clibs) + h2o_includes + uv_includes + ck_includes,
         target='pear',
         stlibpath=['.'],
         libpath=[os.getcwd()],

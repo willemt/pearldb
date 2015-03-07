@@ -23,6 +23,17 @@ typedef struct
     pear_thread_t *threads;
     int nworkers;
     batch_monitor_t batch;
+
+    ck_ht_t etags;
+
+    /* number of etags produced */
+    int etag_num;
+
+    /* etag prefix generated once when server boots */
+    int etag_prefix;
+
+    uv_mutex_t etag_lock;
+
 } server_t;
 
 extern server_t server;
