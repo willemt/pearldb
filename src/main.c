@@ -33,7 +33,7 @@ int kstrccmp(kstr_t* a, char* b)
 
 typedef struct
 {
-    MDB_dbi dbi;
+    MDB_dbi docs;
     MDB_env *db_env;
 } server_t;
 
@@ -67,7 +67,7 @@ static int __put(h2o_req_t *req, kstr_t* key)
     MDB_val v = { .mv_size = req->entity.len,
                   .mv_data = (void*)req->entity.base };
 
-    e = mdb_put(txn, sv->dbi, &k, &v, 0);
+    e = mdb_put(txn, sv->docs, &k, &v, 0);
     if (0 != e)
     {
         perror("mdm put failed");
@@ -119,7 +119,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
                   .mv_data = key->s };
     MDB_val v;
 
-    e = mdb_get(txn, sv->dbi, &k, &v);
+    e = mdb_get(txn, sv->docs, &k, &v);
     switch (e)
     {
     case 0:
@@ -194,7 +194,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
     MDB_val k = { .mv_size = key->len,
                   .mv_data = key->s };
 
-    e = mdb_del(txn, sv->dbi, &k, NULL);
+    e = mdb_del(txn, sv->docs, &k, NULL);
     switch (e)
     {
     case 0:
@@ -318,8 +318,7 @@ fail:
     return e;
 }
 
-static void __db_create(MDB_dbi *dbi, MDB_env **env,
-                        const char* path, const char* db_name)
+static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
 {
     int e;
 
@@ -352,10 +351,14 @@ static void __db_create(MDB_dbi *dbi, MDB_env **env,
         perror(mdb_strerror(e));
         abort();
     }
+}
 
+static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
+{
+    int e;
     MDB_txn *txn;
 
-    e = mdb_txn_begin(*env, NULL, 0, &txn);
+    e = mdb_txn_begin(env, NULL, 0, &txn);
     if (0 != e)
     {
         perror("can't create transaction");
@@ -379,7 +382,8 @@ static void __db_create(MDB_dbi *dbi, MDB_env **env,
 
 static void __new_server(server_t* sv, const char* db_path)
 {
-    __db_create(&sv->dbi, &sv->db_env, db_path, "db");
+    __db_env_create(&sv->docs, &sv->db_env, db_path);
+    __db_create(&sv->docs, sv->db_env, "docs");
 }
 
 int main(int argc, char **argv)
