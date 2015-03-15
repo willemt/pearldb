@@ -108,7 +108,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
     MDB_txn *txn;
     int e;
 
-    e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+    e = mdb_txn_begin(sv->db_env, NULL, MDB_RDONLY, &txn);
     if (0 != e)
     {
         perror("can't create transaction");
