@@ -13,23 +13,8 @@
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
+#include "kstr.h"
 #include "docopt.c"
-
-typedef struct
-{
-    size_t len;
-    char* s;
-} kstr_t;
-
-/**
- * Compare kstr to NUL terminated C string
- * @param[in] a kstr
- * @param[in] b NUL terminated C string
- */
-int kstrccmp(kstr_t* a, char* b)
-{
-    return strncmp(a->s, b, a->len);
-}
 
 typedef struct
 {

@@ -28,6 +28,7 @@ def build(bld):
         ./deps/h2o/include
         ./deps/picohttpparser
         ./deps/klib
+        ./deps/kstr
         """.split()
 
     bld.program(
