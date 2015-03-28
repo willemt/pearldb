@@ -116,6 +116,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
         }
         req->res.status = 404;
         req->res.reason = "NOT FOUND";
+        body.base = "";
         body.len = 0;
         h2o_add_header(&req->pool,
                        &req->res.headers,
@@ -255,57 +256,6 @@ fail:
     return 0;
 }
 
-static h2o_context_t ctx;
-
-static void __on_accept(uv_stream_t * listener, int status)
-{
-    uv_tcp_t *conn;
-    h2o_socket_t *sock;
-
-    if (status != 0)
-        return;
-
-    conn = h2o_mem_alloc(sizeof(*conn));
-    uv_tcp_init(listener->loop, conn);
-
-    if (uv_accept(listener, (uv_stream_t*)conn) != 0)
-    {
-        uv_close((uv_handle_t*)conn, (uv_close_cb)free);
-        return;
-    }
-
-    sock = h2o_uv_socket_create((uv_stream_t*)conn, NULL, 0,
-                                (uv_close_cb)free);
-    h2o_http1_accept(&ctx, ctx.globalconf->hosts, sock);
-}
-
-static int __create_listener(void)
-{
-    static uv_tcp_t listener;
-    struct sockaddr_in addr;
-    int e;
-
-    uv_tcp_init(ctx.loop, &listener);
-    uv_ip4_addr("127.0.0.1", 8888, &addr);
-    e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
-    if (e != 0)
-    {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        goto fail;
-    }
-    e = uv_listen((uv_stream_t*)&listener, 128, __on_accept);
-    if (e != 0)
-    {
-        fprintf(stderr, "uv_listen:%s\n", uv_strerror(e));
-        goto fail;
-    }
-
-    return 0;
-fail:
-    uv_close((uv_handle_t*)&listener, NULL);
-    return e;
-}
-
 static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
 {
     int e;
@@ -368,6 +318,20 @@ static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
     }
 }
 
+/**
+ * workers connect to listen thread via pipe
+ */
+void __spawn_workers()
+{
+    int i;
+    for (i = 0; i < WORKER_THREADS; i++)
+    {
+        pear_thread_t* thread = &sv->threads[i + 1];
+        uv_sem_init(&thread->sem, 0);
+        uv_thread_create(&thread->thread, pear_worker_loop, i + 1);
+    }
+}
+
 int main(int argc, char **argv)
 {
     DocoptArgs args = docopt(argc, argv, 1, "0.1");
@@ -389,18 +353,13 @@ int main(int argc, char **argv)
     h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
     __register_handler(hostconf, "/", __pear);
 
-    uv_loop_t loop;
-    uv_loop_init(&loop);
-    h2o_context_init(&ctx, &loop, &sv->cfg);
+    uv_barrier_init(&sv->listeners_created_barrier, THREADS);
 
-    if (__create_listener() != 0)
-    {
-        fprintf(stderr, "failed to listen to 127.0.0.1:8888:%s\n",
-                strerror(errno));
-        goto fail;
-    }
+    sv->threads = alloca(sizeof(sv->threads[0]) * THREADS);
 
-    uv_run(&loop, UV_RUN_DEFAULT);
+    __spawn_workers();
+
+    pear_listen_loop((void*)0);
 
 fail:
     return 1;

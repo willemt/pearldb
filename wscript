@@ -22,6 +22,7 @@ def build(bld):
 
     clibs = """
         lmdb
+        container_of
         """.split()
 
     h2o_includes = """
@@ -34,6 +35,8 @@ def build(bld):
     bld.program(
         source="""
         src/main.c
+        src/threading_main.c
+        src/threading_worker.c
         """.split() + bld.clib_c_files(clibs),
         includes=['./include'] + bld.clib_h_paths(clibs) + h2o_includes,
         target='pear',
