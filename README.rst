@@ -9,9 +9,13 @@ What?
 =====
 PearDB is a HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `h2o <https://github.com/h2o/h2o>`_ for HTTP.
 
+Persistent connections and pipelining are built-in.
+
 Why?
 ====
-lmdb allows zero copy. h2o is targeted towards low latency. This means PearDB *could be really fast*.
+LMBD allows zero copy. h2o is targeted towards low latency. This means PearDB *could be really fast*.
+
+Because the CRUD is RESTful You could hypothetically use an HTTP cache to scale out reads.
 
 Example usage
 =============
