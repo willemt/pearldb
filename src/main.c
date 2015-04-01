@@ -16,11 +16,9 @@
 #include "kstr.h"
 #include "docopt.c"
 
-typedef struct
-{
-    MDB_dbi docs;
-    MDB_env *db_env;
-} server_t;
+#include "pear.h"
+
+#include "assert.h"
 
 server_t server;
 server_t *sv = &server;
