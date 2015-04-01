@@ -117,7 +117,13 @@ static int __get(h2o_req_t *req, kstr_t* key)
         req->res.status = 404;
         req->res.reason = "NOT FOUND";
         body.len = 0;
+        h2o_add_header(&req->pool,
+                       &req->res.headers,
+                       H2O_TOKEN_CONTENT_LENGTH,
+                       H2O_STRLIT("0"));
         h2o_start_response(req, &generator);
+        /* force keep-alive */
+        req->http1_is_persistent = 1;
         h2o_send(req, &body, 1, 1);
         return 0;
     default:
