@@ -249,7 +249,6 @@ fail:
     return 0;
 }
 
-static h2o_globalconf_t config;
 static h2o_context_t ctx;
 
 static void __on_accept(uv_stream_t * listener, int status)
@@ -363,17 +362,13 @@ static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
     }
 }
 
-static void __new_server(server_t* sv, const char* db_path)
-{
-    __db_env_create(&sv->docs, &sv->db_env, db_path);
-    __db_create(&sv->docs, sv->db_env, "docs");
-}
-
 int main(int argc, char **argv)
 {
     DocoptArgs args = docopt(argc, argv, 1, "0.1");
 
-    __new_server(sv, args.db_path ? args.db_path : "store");
+    __db_env_create(&sv->docs, &sv->db_env,
+                    args.db_path ? args.db_path : "store");
+    __db_create(&sv->docs, sv->db_env, "docs");
 
     if (args.daemonize)
     {
@@ -384,13 +379,13 @@ int main(int argc, char **argv)
     else
         signal(SIGPIPE, SIG_IGN);
 
-    h2o_config_init(&config);
-    h2o_hostconf_t *hostconf = h2o_config_register_host(&config, "default");
+    h2o_config_init(&sv->cfg);
+    h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
     __register_handler(hostconf, "/", __pear);
 
     uv_loop_t loop;
     uv_loop_init(&loop);
-    h2o_context_init(&ctx, &loop, &config);
+    h2o_context_init(&ctx, &loop, &sv->cfg);
 
     if (__create_listener() != 0)
     {
@@ -399,7 +394,7 @@ int main(int argc, char **argv)
         goto fail;
     }
 
-    uv_run(ctx.loop, UV_RUN_DEFAULT);
+    uv_run(&loop, UV_RUN_DEFAULT);
 
 fail:
     return 1;
