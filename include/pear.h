@@ -7,7 +7,7 @@
  * found in the LICENSE file.
  */
 
-#define IPC_PIPE_NAME "pear_server_ipc_33"
+#define IPC_PIPE_NAME "pear_server_ipc"
 #define MAX_CONNECTIONS 512
 #define WORKER_THREADS 4
 #define THREADS WORKER_THREADS + 1
