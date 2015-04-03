@@ -15,6 +15,7 @@
 #include "lmdb.h"
 #include "kstr.h"
 #include "assert.h"
+#include "uv_multiplex.h"
 
 #include "pear.h"
 
@@ -318,30 +319,64 @@ static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
     }
 }
 
-/**
- * workers connect to listen thread via pipe
- */
-void __spawn_workers()
+static void __on_accept(uv_stream_t * listener, int status)
 {
-    int i;
-    for (i = 0; i < WORKER_THREADS; i++)
+    pear_thread_t* thread = listener->data;
+    int e;
+
+    if (0 != status)
     {
-        pear_thread_t* thread = &sv->threads[i + 1];
-        uv_sem_init(&thread->sem, 0);
-        uv_thread_create(&thread->thread, pear_worker_loop, i + 1);
+        fprintf(stderr, "%s\n", uv_strerror(status));
+        abort();
     }
+
+    uv_tcp_t *conn = malloc(sizeof(*conn));
+
+    e = uv_tcp_init(listener->loop, conn);
+    if (0 != status)
+    {
+        fprintf(stderr, "%s\n", uv_strerror(e));
+        abort();
+    }
+
+    e = uv_accept(listener, (uv_stream_t*)conn);
+    if (0 != e)
+    {
+        fprintf(stderr, "%s\n", uv_strerror(e));
+        uv_close((uv_handle_t*)conn, (uv_close_cb)free);
+        abort();
+    }
+
+    h2o_socket_t *sock =
+        h2o_uv_socket_create((uv_stream_t*)conn, NULL, 0, (uv_close_cb)free);
+    h2o_http1_accept(&thread->ctx, sv->cfg.hosts, sock);
+}
+
+static void __worker_start(void* uv_tcp)
+{
+    int e;
+    uv_tcp_t* listener = uv_tcp;
+    pear_thread_t* thread = listener->data;
+
+    h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
+
+    e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS, __on_accept);
+    if (e != 0)
+        fprintf(stderr, "worker uv_listen:%s\n", uv_strerror(e));
+
+    while (1)
+        uv_run(listener->loop, UV_RUN_DEFAULT);
 }
 
 int main(int argc, char **argv)
 {
-    int e;
+    int e, i;
     options_t opts;
+    uv_multiplex_t m;
 
     e = parse_options(argc, argv, &opts);
     if (-1 == e)
-    {
         exit(-1);
-    }
     else if (opts.help)
     {
         show_usage();
@@ -365,13 +400,33 @@ int main(int argc, char **argv)
     h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
     __register_handler(hostconf, "/", __pear);
 
-    uv_barrier_init(&sv->listeners_created_barrier, THREADS);
+    /* Bind HTTP socket */
+    uv_loop_t *loop = uv_default_loop();
+    uv_tcp_t listener;
+    struct sockaddr_in addr;
+    uv_loop_init(loop);
+    uv_tcp_init(loop, &listener);
+    uv_ip4_addr("127.0.0.1", 8888, &addr);
+    e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
+    if (e != 0)
+    {
+        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
+        abort();
+    }
 
-    sv->threads = alloca(sizeof(sv->threads[0]) * THREADS);
+    sv->threads = calloc(THREADS, sizeof(pear_thread_t));
 
-    __spawn_workers();
+    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, WORKER_THREADS,
+                      __worker_start);
 
-    pear_listen_loop((void*)0);
+    /* Start workers */
+    for (i = 0; i < WORKER_THREADS; i++)
+    {
+        pear_thread_t* thread = &sv->threads[i + 1];
+        uv_multiplex_worker_create(&m, i, thread);
+    }
+
+    uv_multiplex_dispatch(&m);
 
 fail:
     return 1;

@@ -1,18 +1,16 @@
-
 /**
  * Copyright (c) 2015, Willem-Hendrik Thiart
  * Use of this source code is governed by a BSD-style license that can be
  * found in the LICENSE file.
  */
 
-#include "h2o.h"
-#include "h2o/http1.h"
-#include "lmdb.h"
+#include <stdlib.h>
+#include <stdio.h>
+#include <assert.h>
+
+#include "uv.h"
 #include "container_of.h"
-
-#include "pear.h"
-
-#include "assert.h"
+#include "uv_multiplex.h"
 
 typedef struct
 {
@@ -40,7 +38,7 @@ static void __on_ipc_write(uv_write_t* req, int status)
  */
 static void __on_pipe_connection(uv_stream_t* pipe, int status)
 {
-    pear_thread_t* thread = container_of((void*)pipe, pear_thread_t, pipe);
+    uv_multiplex_t* m = container_of((void*)pipe, uv_multiplex_t, pipe);
     int e = -1;
 
     uv_buf_t buf = uv_buf_init("PING", 4);
@@ -68,7 +66,7 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
     e = uv_write2(&pc->write_req,
                   (uv_stream_t*)&pc->peer_handle,
                   &buf, 1,
-                  (uv_stream_t*)&thread->listener,
+                  (uv_stream_t*)m->listener,
                   __on_ipc_write);
     if (e != 0)
     {
@@ -79,46 +77,29 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
     //uv_close((uv_handle_t*) pipe, NULL);
 }
 
-/**
- * listen thread passes listen socket to workers via named pipe
- */
-H2O_NORETURN void pear_listen_loop(void *_thread_index)
+int uv_multiplex_dispatch(uv_multiplex_t* m)
 {
     int e;
-    struct sockaddr_in addr;
-    size_t thread_index = (size_t)_thread_index;
-    pear_thread_t* thread = &sv->threads[thread_index];
+    uv_loop_t* loop = m->listener->loop;
 
-    uv_loop_t loop;
-    uv_loop_init(&loop);
-
-    /* bind HTTP socket */
-    thread->listener.data = thread;
-    uv_tcp_init(&loop, &thread->listener);
-    uv_ip4_addr("127.0.0.1", 8888, &addr);
-    e = uv_tcp_bind(&thread->listener, (struct sockaddr *)&addr, 0);
-    if (e != 0)
-    {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        abort();
-    }
+    assert(loop);
 
     /* create pipe for handing off listen socket */
-    e = uv_pipe_init(&loop, &thread->pipe, 1);
+    e = uv_pipe_init(loop, &m->pipe, 1);
     if (0 != e)
     {
         fprintf(stderr, "%s\n", uv_strerror(e));
         abort();
     }
 
-    e = uv_pipe_bind(&thread->pipe, IPC_PIPE_NAME);
+    e = uv_pipe_bind(&m->pipe, m->pipe_name);
     if (0 != e)
     {
         fprintf(stderr, "%s\n", uv_strerror(e));
         abort();
     }
 
-    e = uv_listen((uv_stream_t*)&thread->pipe, 128, __on_pipe_connection);
+    e = uv_listen((uv_stream_t*)&m->pipe, 128, __on_pipe_connection);
     if (0 != e)
     {
         fprintf(stderr, "%s\n", uv_strerror(e));
@@ -127,15 +108,39 @@ H2O_NORETURN void pear_listen_loop(void *_thread_index)
 
     int i;
 
-    for (i = 0; i < WORKER_THREADS; i++)
-        uv_sem_post(&sv->threads[i + 1].sem);
+    for (i = 0; i < m->nworkers; i++)
+        uv_sem_post(&m->workers[i].sem);
 
-    uv_barrier_wait(&sv->listeners_created_barrier);
+    assert(0 == uv_run(loop, UV_RUN_DEFAULT));
+    uv_close((uv_handle_t*)&m->listener, NULL);
+    assert(0 == uv_run(loop, UV_RUN_DEFAULT));
 
-    assert(0 == uv_run(&loop, UV_RUN_DEFAULT));
-    uv_close((uv_handle_t*)&thread->listener, NULL);
-    assert(0 == uv_run(&loop, UV_RUN_DEFAULT));
+    return 0;
+}
 
-    while (1)
-        uv_run(&loop, UV_RUN_DEFAULT);
+int uv_multiplex_init(uv_multiplex_t * m,
+                      uv_tcp_t* listener,
+                      const char* pipe_name,
+                      unsigned int nworkers,
+                      void (*worker_start)(
+                          void* uv_tcp))
+{
+    int i;
+
+    // TODO make sure pipe is not inuse
+
+    m->listener = listener;
+    m->pipe_name = pipe_name;
+    m->nworkers = nworkers;
+    m->workers = calloc(m->nworkers, sizeof(uv_multiplex_worker_t));
+    m->worker_start = worker_start;
+
+    for (i = 0; i < nworkers; i++)
+    {
+        uv_multiplex_worker_t* worker = &m->workers[i];
+        worker->m = m;
+        uv_sem_init(&worker->sem, 0);
+    }
+
+    return 0;
 }
