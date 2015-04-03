@@ -260,7 +260,7 @@ static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
 {
     int e;
 
-    e = mkdir(path, 0777);
+    mkdir(path, 0777);
 
     e = mdb_env_create(env);
     if (0 != e)
