@@ -50,7 +50,8 @@ But you get a 404 if it doesn't exist:
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
    Server: h2o/1.0.0
-   Connection: close
+   Connection: keep-alive
+   content-length: 0
 
 Put
 ---
@@ -109,7 +110,8 @@ Doesn't exist anymore:
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
    Server: h2o/1.0.0
-   Connection: close
+   Connection: keep-alive
+   content-length: 0
 
 Building
 ========
