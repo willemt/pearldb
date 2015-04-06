@@ -1,0 +1,10 @@
+peardb - a key value server
+
+Usage:
+  peardb [--daemonize | --path <db_path>]
+  peardb --help
+
+Options:
+  -d --daemonize       Run as a daemon.
+  -p --path <db_path>  Path where database files will be kept [default: store]
+  -h --help            Prints a short usage summary.

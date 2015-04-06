@@ -14,11 +14,11 @@
 #include "h2o/http1.h"
 #include "lmdb.h"
 #include "kstr.h"
-#include "docopt.c"
+#include "assert.h"
 
 #include "pear.h"
 
-#include "assert.h"
+#include "usage.c"
 
 server_t server;
 server_t *sv = &server;
@@ -334,13 +334,25 @@ void __spawn_workers()
 
 int main(int argc, char **argv)
 {
-    DocoptArgs args = docopt(argc, argv, 1, "0.1");
+    int e;
+    options_t opts;
+
+    e = parse_options(argc, argv, &opts);
+    if (-1 == e)
+    {
+        exit(-1);
+    }
+    else if (opts.help)
+    {
+        show_usage();
+        exit(0);
+    }
 
     __db_env_create(&sv->docs, &sv->db_env,
-                    args.db_path ? args.db_path : "store");
+                    opts.db_path ? opts.db_path : "store");
     __db_create(&sv->docs, sv->db_env, "docs");
 
-    if (args.daemonize)
+    if (opts.daemonize)
     {
         int ret = daemon(1, 0);
         if (-1 == ret)
