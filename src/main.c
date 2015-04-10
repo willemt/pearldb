@@ -383,8 +383,7 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    __db_env_create(&sv->docs, &sv->db_env,
-                    opts.db_path ? opts.db_path : "store");
+    __db_env_create(&sv->docs, &sv->db_env, opts.path);
     __db_create(&sv->docs, sv->db_env, "docs");
 
     if (opts.daemonize)

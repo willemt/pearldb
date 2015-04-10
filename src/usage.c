@@ -14,13 +14,12 @@ typedef struct
     /* flags */
     int daemonize;
     int help;
-    int path;
 
     /* options */
-    
+    char* path;
 
     /* arguments */
-    char* db_path;
+    
 
 } options_t;
 
@@ -33,88 +32,88 @@ struct params
 };
 
 
-#line 61 "src/usage.rl"
+#line 59 "src/usage.rl"
 
 
 
-#line 41 "src/usage.c"
+#line 40 "src/usage.c"
 static const char _params_actions[] = {
-	0, 1, 0, 1, 3, 1, 4, 1, 
-	5, 2, 1, 6, 2, 2, 0
+	0, 1, 0, 1, 1, 1, 2
 };
 
 static const char _params_key_offsets[] = {
 	0, 0, 4, 7, 8, 9, 10, 11, 
 	12, 13, 14, 15, 16, 17, 18, 19, 
-	20, 21, 22, 23, 24, 25, 26, 27
+	20, 21, 22, 23, 24, 25
 };
 
 static const char _params_trans_keys[] = {
 	45, 100, 104, 112, 100, 104, 112, 97, 
 	101, 109, 111, 110, 105, 122, 101, 0, 
 	101, 108, 112, 0, 97, 116, 104, 0, 
-	0, 0, 45, 0
+	45, 0
 };
 
 static const char _params_single_lengths[] = {
 	0, 4, 3, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 1, 1, 1, 1, 1, 0
+	1, 1, 1, 1, 1, 0
 };
 
 static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 0, 0
 };
 
 static const char _params_index_offsets[] = {
 	0, 0, 5, 9, 11, 13, 15, 17, 
 	19, 21, 23, 25, 27, 29, 31, 33, 
-	35, 37, 39, 41, 43, 45, 47, 49
+	35, 37, 39, 41, 43, 45
 };
 
 static const char _params_trans_targs[] = {
 	2, 11, 15, 19, 0, 3, 12, 16, 
 	0, 4, 0, 5, 0, 6, 0, 7, 
 	0, 8, 0, 9, 0, 10, 0, 11, 
-	0, 23, 0, 13, 0, 14, 0, 15, 
-	0, 23, 0, 17, 0, 18, 0, 19, 
-	0, 20, 0, 0, 21, 23, 21, 1, 
-	0, 0, 0
+	0, 21, 0, 13, 0, 14, 0, 15, 
+	0, 21, 0, 17, 0, 18, 0, 19, 
+	0, 21, 0, 1, 0, 0, 0
 };
 
 static const char _params_trans_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 1, 0, 0, 0, 0, 0, 0, 
 	0, 3, 0, 0, 0, 0, 0, 0, 
-	0, 5, 0, 0, 0, 0, 0, 0, 
-	0, 7, 0, 0, 12, 9, 1, 0, 
-	0, 0, 0
+	0, 5, 0, 0, 0, 0, 0
 };
 
-static const int params_start = 22;
-static const int params_first_final = 22;
+static const int params_start = 20;
+static const int params_first_final = 20;
 static const int params_error = 0;
 
-static const int params_en_main = 22;
+static const int params_en_main = 20;
 
 
-#line 64 "src/usage.rl"
+#line 62 "src/usage.rl"
 
 static void params_init(struct params *fsm, options_t* opt)
 {
     memset(opt, 0, sizeof(options_t));
+
     fsm->opt = opt;
     fsm->buflen = 0;
+    fsm->opt->path = strdup("store");
+
     
 #line 112 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
 
-#line 70 "src/usage.rl"
+#line 72 "src/usage.rl"
 }
 
 static void params_execute(struct params *fsm, const char *data, int len)
@@ -197,40 +196,18 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 37 "src/usage.rl"
-	{
-        if (fsm->buflen < BUFLEN)
-            fsm->buffer[fsm->buflen++] = (*p);
-    }
-	break;
-	case 1:
-#line 42 "src/usage.rl"
-	{
-        if (fsm->buflen < BUFLEN)
-            fsm->buffer[fsm->buflen++] = 0;
-    }
-	break;
-	case 2:
-#line 47 "src/usage.rl"
-	{ fsm->buflen = 0; }
-	break;
-	case 3:
-#line 50 "src/usage.rl"
+#line 49 "src/usage.rl"
 	{ fsm->opt->daemonize = 1; }
 	break;
-	case 4:
-#line 51 "src/usage.rl"
+	case 1:
+#line 50 "src/usage.rl"
 	{ fsm->opt->help = 1; }
 	break;
-	case 5:
-#line 52 "src/usage.rl"
-	{ fsm->opt->path = 1; }
+	case 2:
+#line 51 "src/usage.rl"
+	{ fsm->opt->path = strdup(fsm->buffer); }
 	break;
-	case 6:
-#line 54 "src/usage.rl"
-	{ fsm->opt->db_path = strdup(fsm->buffer); }
-	break;
-#line 233 "src/usage.c"
+#line 211 "src/usage.c"
 		}
 	}
 
@@ -243,7 +220,7 @@ _again:
 	_out: {}
 	}
 
-#line 78 "src/usage.rl"
+#line 80 "src/usage.rl"
 }
 
 static int params_finish(struct params *fsm)
@@ -260,13 +237,13 @@ static void show_usage()
     fprintf(stdout, "peardb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  peardb [--daemonize | --path <db_path>]\n");
+    fprintf(stdout, "  peardb [--daemonize | --path DB_PATH]\n");
     fprintf(stdout, "  peardb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
-    fprintf(stdout, "  -d --daemonize  Run as a daemon.\n");
-    fprintf(stdout, "  -p --path  Path where database files will be kept [default: store]\n");
-    fprintf(stdout, "  -h --help  Prints a short usage summary.\n");
+    fprintf(stdout, "  -d --daemonize       Run as a daemon.\n");
+    fprintf(stdout, "  -p --path DB_PATH    Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -h --help            Prints a short usage summary.\n");
     fprintf(stdout, "\n");
 }
 
