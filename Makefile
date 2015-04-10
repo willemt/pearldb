@@ -30,3 +30,7 @@ libuv:
 	mkdir -p build
 	cp deps/libuv/libuv.a .
 
+
+usage.c:
+	docopt2ragel USAGE > src/usage.rl
+	ragel src/usage.rl
