@@ -405,7 +405,7 @@ int main(int argc, char **argv)
     struct sockaddr_in addr;
     uv_loop_init(loop);
     uv_tcp_init(loop, &listener);
-    uv_ip4_addr("127.0.0.1", 8888, &addr);
+    uv_ip4_addr("127.0.0.1", atoi(opts.port), &addr);
     e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
     if (e != 0)
     {

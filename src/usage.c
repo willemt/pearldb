@@ -17,6 +17,7 @@ typedef struct
 
     /* options */
     char* path;
+    char* port;
 
     /* arguments */
     
@@ -32,72 +33,79 @@ struct params
 };
 
 
-#line 59 "src/usage.rl"
+#line 62 "src/usage.rl"
 
 
 
-#line 40 "src/usage.c"
+#line 41 "src/usage.c"
 static const char _params_actions[] = {
-	0, 1, 0, 1, 1, 1, 2
+	0, 1, 0, 1, 1, 1, 2, 1, 
+	3
 };
 
 static const char _params_key_offsets[] = {
-	0, 0, 4, 7, 8, 9, 10, 11, 
-	12, 13, 14, 15, 16, 17, 18, 19, 
-	20, 21, 22, 23, 24, 25
+	0, 0, 5, 8, 9, 10, 11, 12, 
+	13, 14, 15, 16, 17, 18, 19, 20, 
+	21, 23, 24, 25, 26, 27, 28, 29, 
+	30
 };
 
 static const char _params_trans_keys[] = {
-	45, 100, 104, 112, 100, 104, 112, 97, 
-	101, 109, 111, 110, 105, 122, 101, 0, 
-	101, 108, 112, 0, 97, 116, 104, 0, 
-	45, 0
+	45, 97, 100, 104, 112, 100, 104, 112, 
+	97, 101, 109, 111, 110, 105, 122, 101, 
+	0, 101, 108, 112, 0, 97, 111, 116, 
+	104, 0, 114, 116, 0, 45, 0
 };
 
 static const char _params_single_lengths[] = {
-	0, 4, 3, 1, 1, 1, 1, 1, 
+	0, 5, 3, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 1, 1, 1, 0
+	2, 1, 1, 1, 1, 1, 1, 1, 
+	0
 };
 
 static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0
 };
 
 static const char _params_index_offsets[] = {
-	0, 0, 5, 9, 11, 13, 15, 17, 
-	19, 21, 23, 25, 27, 29, 31, 33, 
-	35, 37, 39, 41, 43, 45
+	0, 0, 6, 10, 12, 14, 16, 18, 
+	20, 22, 24, 26, 28, 30, 32, 34, 
+	36, 39, 41, 43, 45, 47, 49, 51, 
+	53
 };
 
 static const char _params_trans_targs[] = {
-	2, 11, 15, 19, 0, 3, 12, 16, 
-	0, 4, 0, 5, 0, 6, 0, 7, 
-	0, 8, 0, 9, 0, 10, 0, 11, 
-	0, 21, 0, 13, 0, 14, 0, 15, 
-	0, 21, 0, 17, 0, 18, 0, 19, 
-	0, 21, 0, 1, 0, 0, 0
+	2, 19, 11, 15, 22, 0, 3, 12, 
+	16, 0, 4, 0, 5, 0, 6, 0, 
+	7, 0, 8, 0, 9, 0, 10, 0, 
+	11, 0, 24, 0, 13, 0, 14, 0, 
+	15, 0, 24, 0, 17, 20, 0, 18, 
+	0, 19, 0, 24, 0, 21, 0, 22, 
+	0, 24, 0, 1, 0, 0, 0
 };
 
 static const char _params_trans_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 1, 0, 0, 0, 0, 0, 0, 
-	0, 3, 0, 0, 0, 0, 0, 0, 
-	0, 5, 0, 0, 0, 0, 0
+	0, 0, 1, 0, 0, 0, 0, 0, 
+	0, 0, 3, 0, 0, 0, 0, 0, 
+	0, 0, 0, 5, 0, 0, 0, 0, 
+	0, 7, 0, 0, 0, 0, 0
 };
 
-static const int params_start = 20;
-static const int params_first_final = 20;
+static const int params_start = 23;
+static const int params_first_final = 23;
 static const int params_error = 0;
 
-static const int params_en_main = 20;
+static const int params_en_main = 23;
 
 
-#line 62 "src/usage.rl"
+#line 65 "src/usage.rl"
 
 static void params_init(struct params *fsm, options_t* opt)
 {
@@ -106,14 +114,15 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->opt = opt;
     fsm->buflen = 0;
     fsm->opt->path = strdup("store");
+    fsm->opt->port = strdup("8888");
 
     
-#line 112 "src/usage.c"
+#line 121 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
 
-#line 72 "src/usage.rl"
+#line 76 "src/usage.rl"
 }
 
 static void params_execute(struct params *fsm, const char *data, int len)
@@ -122,7 +131,7 @@ static void params_execute(struct params *fsm, const char *data, int len)
     const char *pe = data + len;
 
     
-#line 126 "src/usage.c"
+#line 135 "src/usage.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -196,18 +205,22 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 49 "src/usage.rl"
+#line 50 "src/usage.rl"
 	{ fsm->opt->daemonize = 1; }
 	break;
 	case 1:
-#line 50 "src/usage.rl"
+#line 51 "src/usage.rl"
 	{ fsm->opt->help = 1; }
 	break;
 	case 2:
-#line 51 "src/usage.rl"
+#line 52 "src/usage.rl"
 	{ fsm->opt->path = strdup(fsm->buffer); }
 	break;
-#line 211 "src/usage.c"
+	case 3:
+#line 53 "src/usage.rl"
+	{ fsm->opt->port = strdup(fsm->buffer); }
+	break;
+#line 224 "src/usage.c"
 		}
 	}
 
@@ -220,7 +233,7 @@ _again:
 	_out: {}
 	}
 
-#line 80 "src/usage.rl"
+#line 84 "src/usage.rl"
 }
 
 static int params_finish(struct params *fsm)
@@ -237,12 +250,13 @@ static void show_usage()
     fprintf(stdout, "peardb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  peardb [--daemonize | --path DB_PATH]\n");
+    fprintf(stdout, "  peardb [--daemonize | --path DB_PATH | --port PORT]\n");
     fprintf(stdout, "  peardb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d --daemonize       Run as a daemon.\n");
-    fprintf(stdout, "  -p --path DB_PATH    Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -a --path DB_PATH    Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -p --port DB_PATH    Port to listen on [default: 8888]\n");
     fprintf(stdout, "  -h --help            Prints a short usage summary.\n");
     fprintf(stdout, "\n");
 }
