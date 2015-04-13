@@ -9,8 +9,6 @@
 
 #define IPC_PIPE_NAME "pear_server_ipc"
 #define MAX_CONNECTIONS 512
-#define WORKER_THREADS 4
-#define THREADS WORKER_THREADS + 1
 
 typedef struct
 {
@@ -23,6 +21,7 @@ typedef struct
     MDB_env *db_env;
     h2o_globalconf_t cfg;
     pear_thread_t *threads;
+    int nworkers;
 } server_t;
 
 extern server_t server;

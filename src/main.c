@@ -383,6 +383,7 @@ int main(int argc, char **argv)
         exit(0);
     }
 
+    sv->nworkers = atoi(opts.workers);
     __db_env_create(&sv->docs, &sv->db_env, opts.path);
     __db_create(&sv->docs, sv->db_env, "docs");
 
@@ -413,13 +414,12 @@ int main(int argc, char **argv)
         abort();
     }
 
-    sv->threads = calloc(THREADS, sizeof(pear_thread_t));
+    sv->threads = calloc(sv->nworkers + 1, sizeof(pear_thread_t));
 
-    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, WORKER_THREADS,
-                      __worker_start);
+    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, sv->nworkers, __worker_start);
 
     /* Start workers */
-    for (i = 0; i < WORKER_THREADS; i++)
+    for (i = 0; i < sv->nworkers; i++)
     {
         pear_thread_t* thread = &sv->threads[i + 1];
         uv_multiplex_worker_create(&m, i, thread);

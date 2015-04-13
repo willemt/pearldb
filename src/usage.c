@@ -18,6 +18,7 @@ typedef struct
     /* options */
     char* path;
     char* port;
+    char* workers;
 
     /* arguments */
     
@@ -33,79 +34,94 @@ struct params
 };
 
 
-#line 62 "src/usage.rl"
+#line 65 "src/usage.rl"
 
 
 
-#line 41 "src/usage.c"
+#line 42 "src/usage.c"
 static const char _params_actions[] = {
-	0, 1, 0, 1, 1, 1, 2, 1, 
-	3
+	0, 1, 0, 1, 3, 1, 4, 2, 
+	1, 5, 2, 1, 6, 2, 1, 7, 
+	2, 2, 0
 };
 
 static const char _params_key_offsets[] = {
-	0, 0, 5, 8, 9, 10, 11, 12, 
-	13, 14, 15, 16, 17, 18, 19, 20, 
-	21, 23, 24, 25, 26, 27, 28, 29, 
-	30
+	0, 0, 6, 10, 11, 12, 13, 14, 
+	15, 16, 17, 18, 19, 20, 21, 22, 
+	23, 25, 26, 27, 28, 29, 30, 31, 
+	32, 33, 34, 35, 36, 37, 38, 39, 
+	40, 41, 42, 43, 44, 45
 };
 
 static const char _params_trans_keys[] = {
-	45, 97, 100, 104, 112, 100, 104, 112, 
-	97, 101, 109, 111, 110, 105, 122, 101, 
-	0, 101, 108, 112, 0, 97, 111, 116, 
-	104, 0, 114, 116, 0, 45, 0
+	45, 97, 100, 104, 112, 119, 100, 104, 
+	112, 119, 97, 101, 109, 111, 110, 105, 
+	122, 101, 0, 101, 108, 112, 0, 97, 
+	111, 116, 104, 0, 0, 0, 114, 116, 
+	0, 0, 0, 111, 114, 107, 101, 114, 
+	115, 0, 0, 0, 45, 0
 };
 
 static const char _params_single_lengths[] = {
-	0, 5, 3, 1, 1, 1, 1, 1, 
+	0, 6, 4, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	2, 1, 1, 1, 1, 1, 1, 1, 
-	0
+	1, 1, 1, 1, 1, 1, 1, 1, 
+	1, 1, 1, 1, 1, 0
 };
 
 static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0
 };
 
 static const char _params_index_offsets[] = {
-	0, 0, 6, 10, 12, 14, 16, 18, 
-	20, 22, 24, 26, 28, 30, 32, 34, 
-	36, 39, 41, 43, 45, 47, 49, 51, 
-	53
+	0, 0, 7, 12, 14, 16, 18, 20, 
+	22, 24, 26, 28, 30, 32, 34, 36, 
+	38, 41, 43, 45, 47, 49, 51, 53, 
+	55, 57, 59, 61, 63, 65, 67, 69, 
+	71, 73, 75, 77, 79, 81
 };
 
 static const char _params_trans_targs[] = {
-	2, 19, 11, 15, 22, 0, 3, 12, 
-	16, 0, 4, 0, 5, 0, 6, 0, 
-	7, 0, 8, 0, 9, 0, 10, 0, 
-	11, 0, 24, 0, 13, 0, 14, 0, 
-	15, 0, 24, 0, 17, 20, 0, 18, 
-	0, 19, 0, 24, 0, 21, 0, 22, 
-	0, 24, 0, 1, 0, 0, 0
+	2, 19, 11, 15, 24, 33, 0, 3, 
+	12, 16, 27, 0, 4, 0, 5, 0, 
+	6, 0, 7, 0, 8, 0, 9, 0, 
+	10, 0, 11, 0, 37, 0, 13, 0, 
+	14, 0, 15, 0, 37, 0, 17, 22, 
+	0, 18, 0, 19, 0, 20, 0, 0, 
+	21, 37, 21, 23, 0, 24, 0, 25, 
+	0, 0, 26, 37, 26, 28, 0, 29, 
+	0, 30, 0, 31, 0, 32, 0, 33, 
+	0, 34, 0, 0, 35, 37, 35, 1, 
+	0, 0, 0
 };
 
 static const char _params_trans_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 1, 0, 0, 0, 0, 0, 
-	0, 0, 3, 0, 0, 0, 0, 0, 
-	0, 0, 0, 5, 0, 0, 0, 0, 
-	0, 7, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 3, 0, 0, 0, 
+	0, 0, 0, 0, 5, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	16, 7, 1, 0, 0, 0, 0, 0, 
+	0, 0, 16, 10, 1, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 16, 13, 1, 0, 
+	0, 0, 0
 };
 
-static const int params_start = 23;
-static const int params_first_final = 23;
+static const int params_start = 36;
+static const int params_first_final = 36;
 static const int params_error = 0;
 
-static const int params_en_main = 23;
+static const int params_en_main = 36;
 
 
-#line 65 "src/usage.rl"
+#line 68 "src/usage.rl"
 
 static void params_init(struct params *fsm, options_t* opt)
 {
@@ -115,14 +131,15 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->buflen = 0;
     fsm->opt->path = strdup("store");
     fsm->opt->port = strdup("8888");
+    fsm->opt->workers = strdup("4");
 
     
-#line 121 "src/usage.c"
+#line 138 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
 
-#line 76 "src/usage.rl"
+#line 80 "src/usage.rl"
 }
 
 static void params_execute(struct params *fsm, const char *data, int len)
@@ -131,7 +148,7 @@ static void params_execute(struct params *fsm, const char *data, int len)
     const char *pe = data + len;
 
     
-#line 135 "src/usage.c"
+#line 152 "src/usage.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -205,22 +222,44 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 50 "src/usage.rl"
-	{ fsm->opt->daemonize = 1; }
+#line 38 "src/usage.rl"
+	{
+        if (fsm->buflen < BUFLEN)
+            fsm->buffer[fsm->buflen++] = (*p);
+    }
 	break;
 	case 1:
-#line 51 "src/usage.rl"
-	{ fsm->opt->help = 1; }
+#line 43 "src/usage.rl"
+	{
+        if (fsm->buflen < BUFLEN)
+            fsm->buffer[fsm->buflen++] = 0;
+    }
 	break;
 	case 2:
-#line 52 "src/usage.rl"
-	{ fsm->opt->path = strdup(fsm->buffer); }
+#line 48 "src/usage.rl"
+	{ fsm->buflen = 0; }
 	break;
 	case 3:
+#line 51 "src/usage.rl"
+	{ fsm->opt->daemonize = 1; }
+	break;
+	case 4:
+#line 52 "src/usage.rl"
+	{ fsm->opt->help = 1; }
+	break;
+	case 5:
 #line 53 "src/usage.rl"
+	{ fsm->opt->path = strdup(fsm->buffer); }
+	break;
+	case 6:
+#line 54 "src/usage.rl"
 	{ fsm->opt->port = strdup(fsm->buffer); }
 	break;
-#line 224 "src/usage.c"
+	case 7:
+#line 55 "src/usage.rl"
+	{ fsm->opt->workers = strdup(fsm->buffer); }
+	break;
+#line 263 "src/usage.c"
 		}
 	}
 
@@ -233,7 +272,7 @@ _again:
 	_out: {}
 	}
 
-#line 84 "src/usage.rl"
+#line 88 "src/usage.rl"
 }
 
 static int params_finish(struct params *fsm)
@@ -250,14 +289,15 @@ static void show_usage()
     fprintf(stdout, "peardb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  peardb [--daemonize | --path DB_PATH | --port PORT]\n");
+    fprintf(stdout, "  peardb [--daemonize | --path DB_PATH | --port PORT | -w WORKERS]\n");
     fprintf(stdout, "  peardb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
-    fprintf(stdout, "  -d --daemonize       Run as a daemon.\n");
-    fprintf(stdout, "  -a --path DB_PATH    Path where database files will be kept [default: store]\n");
-    fprintf(stdout, "  -p --port DB_PATH    Port to listen on [default: 8888]\n");
-    fprintf(stdout, "  -h --help            Prints a short usage summary.\n");
+    fprintf(stdout, "  -d --daemonize        Run as a daemon.\n");
+    fprintf(stdout, "  -a --path DB_PATH     Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -p --port PORT        Port to listen on [default: 8888]\n");
+    fprintf(stdout, "  -w --workers WORKERS  Number of worker threads [default: 4]\n");
+    fprintf(stdout, "  -h --help             Prints a short usage summary.\n");
     fprintf(stdout, "\n");
 }
 

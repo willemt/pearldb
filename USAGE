@@ -1,11 +1,12 @@
 peardb - a key value server
 
 Usage:
-  peardb [--daemonize | --path DB_PATH | --port PORT]
+  peardb [--daemonize | --path DB_PATH | --port PORT | -w WORKERS]
   peardb --help
 
 Options:
-  -d --daemonize       Run as a daemon.
-  -a --path DB_PATH    Path where database files will be kept [default: store]
-  -p --port DB_PATH    Port to listen on [default: 8888]
-  -h --help            Prints a short usage summary.
+  -d --daemonize        Run as a daemon.
+  -a --path DB_PATH     Path where database files will be kept [default: store]
+  -p --port PORT        Port to listen on [default: 8888]
+  -w --workers WORKERS  Number of worker threads [default: 4]
+  -h --help             Prints a short usage summary.
