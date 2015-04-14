@@ -1,0 +1,12 @@
+{
+  "name": "bmon",
+  "version": "0.0.1",
+  "repo": "willemt/bmon",
+  "description": "Combine work from multiple threads into a batch to gain performance",
+  "keywords": ["libuv"],
+  "license": "BSD",
+  "src": ["src/batch_monitor.c", "src/batch_monitor.h"]
+  "dependencies": {
+    "willemt/heap": "*"
+  }
+}

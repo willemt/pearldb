@@ -10,16 +10,35 @@
 /* for mkdir */
 #include <sys/stat.h>
 
+/* for nanosleep */
+#include <time.h>
+
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
 #include "kstr.h"
+#include "heap.h"
 #include "assert.h"
 #include "uv_multiplex.h"
+#include "batch_monitor.h"
 
 #include "pear.h"
 
 #include "usage.c"
+
+#define min(a, b) ((a) < (b) ? (a) : (b))
+
+typedef struct
+{
+    MDB_val key;
+    MDB_val val;
+} batch_item_t;
+
+int batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
+{
+    return strncmp(a->key.mv_data, b->key.mv_data,
+                   min(a->key.mv_size, b->key.mv_size));
+}
 
 server_t server;
 server_t *sv = &server;
@@ -33,9 +52,8 @@ static void __register_handler(h2o_hostconf_t *hostconf, const char *path, int (
     handler->on_req = on_req;
 }
 
-static int __put(h2o_req_t *req, kstr_t* key)
+static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
-    static h2o_generator_t generator = { NULL, NULL };
     MDB_txn *txn;
     int e;
 
@@ -46,16 +64,15 @@ static int __put(h2o_req_t *req, kstr_t* key)
         abort();
     }
 
-    MDB_val k = { .mv_size = key->len,
-                  .mv_data = key->s };
-    MDB_val v = { .mv_size = req->entity.len,
-                  .mv_data = (void*)req->entity.base };
-
-    e = mdb_put(txn, sv->docs, &k, &v, 0);
-    if (0 != e)
+    while (0 < heap_count(bq->queue))
     {
-        perror("mdm put failed");
-        abort();
+        batch_item_t* item = heap_poll(bq->queue);
+        e = mdb_put(txn, sv->docs, &item->key, &item->val, 0);
+        if (0 != e)
+        {
+            perror("mdm put failed");
+            abort();
+        }
     }
 
     e = mdb_txn_commit(txn);
@@ -64,6 +81,20 @@ static int __put(h2o_req_t *req, kstr_t* key)
         perror("can't commit transaction");
         abort();
     }
+
+    return 0;
+}
+
+static int __put(h2o_req_t *req, kstr_t* key)
+{
+    static h2o_generator_t generator = { NULL, NULL };
+
+    batch_item_t item;
+    item.key.mv_data = key->s;
+    item.key.mv_size = key->len;
+    item.val.mv_data = req->entity.base;
+    item.val.mv_size = req->entity.len;
+    bmon_offer(&sv->batch, &item);
 
     h2o_iovec_t body;
     body.len = 0;
@@ -229,8 +260,8 @@ fail:
 
 static int __pear(h2o_handler_t * self, h2o_req_t * req)
 {
-    h2o_iovec_t body;
     static h2o_generator_t generator = { NULL, NULL };
+    h2o_iovec_t body;
 
     /* get key */
     char* end;
@@ -387,6 +418,9 @@ int main(int argc, char **argv)
     __db_env_create(&sv->docs, &sv->db_env, opts.path);
     __db_create(&sv->docs, sv->db_env, "docs");
 
+    bmon_init(&sv->batch, atoi(opts.batch_period),
+              batch_item_cmp, __batcher_commit);
+
     if (opts.daemonize)
     {
         int ret = daemon(1, 0);
@@ -416,7 +450,8 @@ int main(int argc, char **argv)
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(pear_thread_t));
 
-    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, sv->nworkers, __worker_start);
+    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, sv->nworkers,
+                      __worker_start);
 
     /* Start workers */
     for (i = 0; i < sv->nworkers; i++)
@@ -424,6 +459,8 @@ int main(int argc, char **argv)
         pear_thread_t* thread = &sv->threads[i + 1];
         uv_multiplex_worker_create(&m, i, thread);
     }
+
+    bmon_dispatch(&sv->batch);
 
     uv_multiplex_dispatch(&m);
 

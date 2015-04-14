@@ -1,0 +1,9 @@
+{
+  "name": "heap",
+  "version": "0.0.1",
+  "repo": "willemt/heap",
+  "description": "Heap priority queued",
+  "keywords": ["heap", "priority queue", "queue"],
+  "license": "BSD",
+  "src": ["heap.c", "heap.h"]
+}

@@ -24,6 +24,8 @@ def build(bld):
         lmdb
         container_of
         uv_multiplex
+        bmon
+        heap
         """.split()
 
     h2o_includes = """

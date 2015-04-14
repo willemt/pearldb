@@ -22,6 +22,7 @@ typedef struct
     h2o_globalconf_t cfg;
     pear_thread_t *threads;
     int nworkers;
+    batch_monitor_t batch;
 } server_t;
 
 extern server_t server;
