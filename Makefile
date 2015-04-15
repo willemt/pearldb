@@ -1,6 +1,6 @@
 letsbuildthis:
 	python waf configure
-	python waf build -v
+	python waf build
 
 clean:
 	python waf clean

@@ -4,6 +4,8 @@
  * found in the LICENSE file.
  */
 
+#include <stdio.h>
+
 /* for nanosleep */
 #include <time.h>
 
@@ -83,7 +85,7 @@ int bmon_init(batch_monitor_t* batch,
               int batch_period,
               int (*item_cmp)(
                   void* a, void* b, void* udata),
-              int (*commit)(batch_queue_t* bq))
+              int (*commit)(batch_monitor_t* m, batch_queue_t* bq))
 {
     uv_mutex_init(&batch->lock);
     uv_cond_init(&batch->done);

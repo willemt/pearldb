@@ -419,7 +419,7 @@ int main(int argc, char **argv)
     __db_create(&sv->docs, sv->db_env, "docs");
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
-              batch_item_cmp, __batcher_commit);
+              (void*)batch_item_cmp, __batcher_commit);
 
     if (opts.daemonize)
     {
