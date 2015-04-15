@@ -5,7 +5,7 @@
   "description": "Combine work from multiple threads into a batch to gain performance",
   "keywords": ["libuv"],
   "license": "BSD",
-  "src": ["src/batch_monitor.c", "include/batch_monitor.h"]
+  "src": ["src/batch_monitor.c", "include/batch_monitor.h"],
   "dependencies": {
     "willemt/heap": "*"
   }
