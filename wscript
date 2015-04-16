@@ -20,6 +20,21 @@ def configure(conf):
 def build(bld):
     bld.load('clib')
 
+    cflags = """
+         -g
+        -Werror=int-to-pointer-cast
+        -Werror=unused-variable
+        -Werror=return-type
+        -Werror=uninitialized
+        -Werror=pointer-to-int-cast
+    """.split()
+
+    if sys.platform == 'darwin':
+        cflags.extend("""
+            -fcolor-diagnostics
+            -fdiagnostics-color
+            """.split())
+
     clibs = """
         lmdb
         container_of
@@ -44,13 +59,4 @@ def build(bld):
         stlibpath=['.'],
         libpath=[os.getcwd()],
         lib=['uv', 'h2o', 'ssl', 'crypto'],
-        cflags=[
-            '-g',
-            '-fcolor-diagnostics',
-            '-fdiagnostics-color',
-            '-Werror=int-to-pointer-cast',
-            '-Werror=unused-variable',
-            '-Werror=return-type',
-            '-Werror=uninitialized',
-            '-Werror=pointer-to-int-cast',
-            ])
+        cflags=cflags)
