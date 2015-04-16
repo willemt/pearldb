@@ -43,15 +43,6 @@ int batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
 server_t server;
 server_t *sv = &server;
 
-static void __register_handler(h2o_hostconf_t *hostconf, const char *path, int (*on_req)(
-                                   h2o_handler_t *,
-                                   h2o_req_t *))
-{
-    h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, path);
-    h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
-    handler->on_req = on_req;
-}
-
 static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
     MDB_txn *txn;
@@ -432,7 +423,9 @@ int main(int argc, char **argv)
 
     h2o_config_init(&sv->cfg);
     h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
-    __register_handler(hostconf, "/", __pear);
+    h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/");
+    h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
+    handler->on_req = __pear;
 
     /* Bind HTTP socket */
     uv_loop_t *loop = uv_default_loop();
