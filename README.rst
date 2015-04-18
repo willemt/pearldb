@@ -27,7 +27,7 @@ Starting the server
 
 .. code-block:: bash
 
-   build/pear --daemonize
+   build/pear -p 8888
    echo daemonizing...
 
 .. code-block:: bash
