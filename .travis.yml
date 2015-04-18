@@ -2,8 +2,8 @@ language: c
 before_install:
   - sudo pip install cpp-coveralls --use-mirrors
   - sudo pip install rsttst pytest httpie
-  - sudo apt-get install libuv-dev
 script:
+  - sudo make libuv
   - make libh2o && pwd
   - mkdir build/c4che
   - make
