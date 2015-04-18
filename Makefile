@@ -13,8 +13,7 @@ libh2o:
 	cd deps/h2o && git checkout rel/v1.0.0
 	cd deps/h2o && cmake .
 	cd deps/h2o && make libh2o
-	mkdir -p build
-	cp deps/h2o/libh2o.a .
+	cp /usr/local/lib/libuv.a .
 
 libuv:
 	if test -e deps/libuv; \
