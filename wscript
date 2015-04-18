@@ -29,11 +29,16 @@ def build(bld):
         -Werror=pointer-to-int-cast
     """.split()
 
+    lib = ['uv', 'h2o', 'ssl', 'crypto']
+
     if sys.platform == 'darwin':
         cflags.extend("""
             -fcolor-diagnostics
             -fdiagnostics-color
             """.split())
+    elif sys.platform.startswith('linux'):
+        lib.append('pthread')
+        lib.append('rt')
 
     clibs = """
         lmdb
@@ -58,5 +63,5 @@ def build(bld):
         target='pear',
         stlibpath=['.'],
         libpath=[os.getcwd()],
-        lib=['uv', 'h2o', 'ssl', 'crypto'],
+        lib=lib,
         cflags=cflags)
