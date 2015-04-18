@@ -27,7 +27,9 @@ Starting the server
 
 .. code-block:: bash
 
-   build/pear -p 8888
+   build/pear -d -p 8888
+   sleep 5
+   ps ax | grep pear
    echo daemonizing...
 
 .. code-block:: bash
