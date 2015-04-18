@@ -5,5 +5,5 @@
   "description": "Let's share one TCP socket across multiple threads",
   "keywords": ["libuv", "tcp"],
   "license": "BSD",
-  "src": ["src/dispatcher.c", "src/worker.c", "include/duraqueue.h"]
+  "src": ["src/dispatcher.c", "src/worker.c", "include/uv_multiplex.h"]
 }

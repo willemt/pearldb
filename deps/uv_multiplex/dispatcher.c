@@ -135,6 +135,9 @@ int uv_multiplex_init(uv_multiplex_t * m,
     m->workers = calloc(m->nworkers, sizeof(uv_multiplex_worker_t));
     m->worker_start = worker_start;
 
+    /* remove named pipe */
+    unlink(pipe_name);
+
     for (i = 0; i < nworkers; i++)
     {
         uv_multiplex_worker_t* worker = &m->workers[i];
