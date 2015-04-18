@@ -25,7 +25,6 @@ libuv:
 	cd deps/libuv && sh autogen.sh
 	cd deps/libuv && ./configure
 	cd deps/libuv && make
-	cd deps/libuv && make check
 	cd deps/libuv && make install
 	mkdir -p build
 	cp deps/libuv/libuv.a .
