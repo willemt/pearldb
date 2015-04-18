@@ -36,8 +36,9 @@ def build(bld):
             -fcolor-diagnostics
             -fdiagnostics-color
             """.split())
-    elif sys.platform == 'linux':
+    elif sys.platform.startswith('linux'):
         lib.append('pthread')
+        lib.append('rt')
 
     clibs = """
         lmdb
