@@ -13,7 +13,7 @@ libh2o:
 	cd deps/h2o && git checkout rel/v1.0.0
 	cd deps/h2o && cmake .
 	cd deps/h2o && make libh2o
-	cp /usr/local/lib/libuv.a .
+	cp deps/h2o/libh2o.a .
 
 libuv:
 	if test -e deps/libuv; \
@@ -25,7 +25,7 @@ libuv:
 	cd deps/libuv && ./configure
 	cd deps/libuv && make
 	cd deps/libuv && make install
-	cp deps/libuv/libuv.a .
+	cp /usr/local/lib/libuv.a .
 
 usage.c:
 	docopt2ragel USAGE > src/usage.rl

@@ -5,7 +5,6 @@ before_install:
 script:
   - sudo make libuv
   - make libh2o && pwd
-  - mkdir build/c4che
   - make
   - sudo rsttst README.rst && py.test -vvv
 after_success:
