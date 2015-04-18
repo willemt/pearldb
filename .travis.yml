@@ -1,7 +1,7 @@
 language: c
 before_install:
   - sudo pip install cpp-coveralls --use-mirrors
-  - sudo pip install rsttst pytest
+  - sudo pip install rsttst pytest httpie
 script:
   - sudo make libuv
   - make libh2o && pwd
