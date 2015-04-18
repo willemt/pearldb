@@ -27,8 +27,6 @@ libuv:
 	cd deps/libuv && make
 	cd deps/libuv && make install
 	mkdir -p build
-	cp deps/libuv/libuv.a .
-
 
 usage.c:
 	docopt2ragel USAGE > src/usage.rl
