@@ -3,6 +3,6 @@ before_install:
   - sudo pip install cpp-coveralls --use-mirrors
   - sudo pip install rsttst pytest
 script:
-  - make libuv && make libh2o && make && sudo rsttst README.rst && py.test -vvv
+  - sudo make libuv && make libh2o && make && sudo rsttst README.rst && py.test -vvv
 after_success:
   - coveralls --verbose --exclude include --exclude tests --exclude deps
