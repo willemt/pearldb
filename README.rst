@@ -4,6 +4,9 @@
 .. image:: http://badges.github.io/stability-badges/dist/experimental.svg
    :target: http://github.com/badges/stability-badges
 
+.. image:: https://travis-ci.org/willemt/peardb.png
+   :target: https://travis-ci.org/willemt/peardb
+
 
 What?
 =====
