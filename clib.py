@@ -4,7 +4,7 @@
 
 from waflib.Configure import conf
 
-import simplejson as json
+import json
 import os
 import itertools
 
