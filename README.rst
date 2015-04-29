@@ -44,7 +44,7 @@ You obtain a value by GET'ng the key. In this case the key is 'x':
 
 .. code-block:: bash
 
-   http -h --ignore-stdin http://127.0.0.1/x/
+   http -v -h --ignore-stdin http://127.0.0.1/x/
 
 But you get a 404 if it doesn't exist:
 
