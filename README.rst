@@ -30,8 +30,9 @@ Starting the server
 
 .. code-block:: bash
 
-   build/pear -d -p 8888
+   sudo build/pear -d -p 80
    echo daemonizing...
+   sleep 10
 
 .. code-block:: bash
 
@@ -39,11 +40,11 @@ Starting the server
 
 Get
 ---
-You obtain a value by GET'ng the key. In this case the key is 'x':
+You obtain a value by GET'ng the key. In this case the key is 'mykey':
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1:8888/x/
+   http -v -h --ignore-stdin http://127.0.0.1/mykey/
 
 But you get a 404 if it doesn't exist:
 
@@ -62,7 +63,7 @@ We use PUT instead of POST for putting a key-value pair.
 
 .. code-block:: bash
 
-   echo "MY VALUE" | http -h PUT 127.0.0.1:8888/x/
+   echo "MY VALUE" | http -h PUT http://127.0.0.1/mykey/
 
 .. code-block:: bash
    :class: dotted
@@ -78,7 +79,7 @@ Now we can finally retrieve our data:
 
 .. code-block:: bash
 
-   http --ignore-stdin 127.0.0.1:8888/x/
+   http --ignore-stdin http://127.0.0.1/mykey/
 
 .. code-block:: bash
    :class: dotted
@@ -90,7 +91,7 @@ Delete
 ------
 .. code-block:: bash
 
-   http -h --ignore-stdin DELETE 127.0.0.1:8888/x/
+   http -h --ignore-stdin DELETE http://127.0.0.1/mykey/
 
 .. code-block:: bash
    :class: dotted
@@ -105,7 +106,7 @@ Doesn't exist anymore:
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1:8888/x/
+   http -h --ignore-stdin http://127.0.0.1/mykey/
 
 .. code-block:: bash
    :class: dotted
