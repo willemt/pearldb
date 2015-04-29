@@ -48,6 +48,7 @@ static int __http_error(h2o_req_t *req, int status_code, const char* reason)
     static h2o_generator_t generator = { NULL, NULL };
     h2o_iovec_t body;
 
+    body.base = "";
     body.len = 0;
     req->res.status = status_code;
     req->res.reason = reason;
