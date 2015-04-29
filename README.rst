@@ -32,7 +32,7 @@ Starting the server
 
    sudo build/pear -d -p 80
    echo daemonizing...
-   sleep 2
+   sleep 10
 
 .. code-block:: bash
 
