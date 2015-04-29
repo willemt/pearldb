@@ -9,7 +9,7 @@ response = function(status, headers, body)
         --print(body)
         --print(body)
     else
-        print(status .. " " .. body .. "\n")
+        --print(status .. " " .. body .. "\n")
     end
     if status == 500 then
         print(body)

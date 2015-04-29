@@ -43,6 +43,25 @@ int batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
 server_t server;
 server_t *sv = &server;
 
+static int __http_error(h2o_req_t *req, int status_code, const char* reason)
+{
+    static h2o_generator_t generator = { NULL, NULL };
+    h2o_iovec_t body;
+
+    body.len = 0;
+    req->res.status = status_code;
+    req->res.reason = reason;
+    h2o_add_header(&req->pool,
+                   &req->res.headers,
+                   H2O_TOKEN_CONTENT_LENGTH,
+                   H2O_STRLIT("0"));
+    h2o_start_response(req, &generator);
+    /* force keep-alive */
+    req->http1_is_persistent = 1;
+    h2o_send(req, &body, 1, 1);
+    return 0;
+}
+
 static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
     MDB_txn *txn;
@@ -100,11 +119,7 @@ static int __put(h2o_req_t *req, kstr_t* key)
     return 0;
 
 fail:
-    req->res.status = 400;
-    req->res.reason = "BAD";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return 1;
+    return __http_error(req, 400, "BAD");
 }
 
 static int __get(h2o_req_t *req, kstr_t* key)
@@ -137,19 +152,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
             perror("can't commit transaction");
             abort();
         }
-        req->res.status = 404;
-        req->res.reason = "NOT FOUND";
-        body.base = "";
-        body.len = 0;
-        h2o_add_header(&req->pool,
-                       &req->res.headers,
-                       H2O_TOKEN_CONTENT_LENGTH,
-                       H2O_STRLIT("0"));
-        h2o_start_response(req, &generator);
-        /* force keep-alive */
-        req->http1_is_persistent = 1;
-        h2o_send(req, &body, 1, 1);
-        return 0;
+        return __http_error(req, 404, "NOT FOUND");
     default:
         goto fail;
     }
@@ -179,12 +182,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
     h2o_send(req, &body, 1, 1);
     return 0;
 fail:
-    body.len = 0;
-    req->res.status = 400;
-    req->res.reason = "BAD";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return -1;
+    return __http_error(req, 400, "BAD");
 }
 
 static int __delete(h2o_req_t *req, kstr_t* key)
@@ -219,12 +217,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
             perror("can't commit transaction");
             abort();
         }
-        req->res.status = 404;
-        req->res.reason = "NOT FOUND";
-        body.len = 0;
-        h2o_start_response(req, &generator);
-        h2o_send(req, &body, 1, 1);
-        return 0;
+        return __http_error(req, 404, "NOT FOUND");
     default:
         goto fail;
     }
@@ -242,18 +235,11 @@ static int __delete(h2o_req_t *req, kstr_t* key)
     h2o_send(req, &body, 1, 1);
     return 0;
 fail:
-    req->res.status = 400;
-    req->res.reason = "BAD";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return -1;
+    return __http_error(req, 400, "BAD");
 }
 
 static int __pear(h2o_handler_t * self, h2o_req_t * req)
 {
-    static h2o_generator_t generator = { NULL, NULL };
-    h2o_iovec_t body;
-
     /* get key */
     char* end;
     kstr_t key;
@@ -271,12 +257,7 @@ static int __pear(h2o_handler_t * self, h2o_req_t * req)
         return __delete(req, &key);
 
 fail:
-    body.len = 0;
-    req->res.status = 400;
-    req->res.reason = "BAD";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return 0;
+    return __http_error(req, 400, "BAD");
 }
 
 static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
