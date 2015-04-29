@@ -51,17 +51,16 @@ static int __http_error(h2o_req_t *req,
     static h2o_generator_t generator = { NULL, NULL };
     h2o_iovec_t body;
 
+    body.base = "";
     body.len = 0;
     req->res.status = status_code;
     req->res.reason = reason;
-    if (keep_alive)
-        h2o_add_header(&req->pool,
-                       &req->res.headers,
-                       H2O_TOKEN_CONTENT_LENGTH,
-                       H2O_STRLIT("0"));
+    h2o_add_header(&req->pool,
+                   &req->res.headers,
+                   H2O_TOKEN_CONTENT_LENGTH,
+                   H2O_STRLIT("0"));
     h2o_start_response(req, &generator);
-    if (keep_alive)
-        req->http1_is_persistent = 1;
+    req->http1_is_persistent = 1;
     h2o_send(req, &body, 1, 1);
     return 0;
 }
