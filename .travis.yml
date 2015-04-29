@@ -1,8 +1,8 @@
 language: c
 before_install:
   - sudo apt-get update
-  - sudo DEBIAN_FRONTEND=noninteractive apt-get upgrade -y
-  - sudo DEBIAN_FRONTEND=noninteractive apt-get install -y python
+  - sudo DEBIAN_FRONTEND=noninteractive apt-get -y upgrade 
+  - sudo DEBIAN_FRONTEND=noninteractive apt-get -y install python
   - sudo pip install cpp-coveralls --use-mirrors
   - sudo pip install rsttst pytest httpie
 script:
