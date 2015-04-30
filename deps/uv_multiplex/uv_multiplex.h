@@ -16,8 +16,12 @@ typedef struct
     /* number of workers */
     int nworkers;
 
-    void (*worker_start)(
-        void* uv_tcp);
+    /* number of workers that have connected */
+    int nconnected;
+
+    void (*worker_start)(void* uv_tcp);
+
+    uv_mutex_t lock;
 } uv_multiplex_t;
 
 struct uv_multiplex_worker_s

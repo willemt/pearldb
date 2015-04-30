@@ -13,23 +13,16 @@
 #include "container_of.h"
 #include "uv_multiplex.h"
 
-static void __on_ipc_close(uv_handle_t* handle)
-{
-    //uv_multiplex_worker_t* worker = container_of(handle, uv_multiplex_worker_t, pipe);
-    //free(ctx);
-}
-
 static void __on_ipc_alloc(uv_handle_t* handle,
                            size_t suggested_size,
                            uv_buf_t* buf)
 {
-//    uv_multiplex_worker_t* worker = container_of(handle, uv_multiplex_worker_t, pipe);
     buf->base = calloc(1, suggested_size);
     buf->len = suggested_size;
 }
 
 /**
- * worker has received the listening socket
+ * Worker has received the listening socket
  */
 static void __on_ipc_read(uv_stream_t* handle,
                           ssize_t nread,
@@ -46,7 +39,7 @@ static void __on_ipc_read(uv_stream_t* handle,
 
     assert(type == UV_TCP);
 
-    e = uv_tcp_init(worker->pipe.loop, &worker->listener);
+    e = uv_tcp_init(handle->loop, &worker->listener);
     if (0 != e)
     {
         fprintf(stderr, "%s\n", uv_strerror(e));
@@ -60,6 +53,7 @@ static void __on_ipc_read(uv_stream_t* handle,
         abort();
     }
 
+    /* closing the pipe will allow us to exit our loop */
     uv_close((uv_handle_t*)handle, NULL);
 }
 
@@ -89,14 +83,27 @@ static void __on_ipc_connect(uv_connect_t* req, int status)
 }
 
 /**
+ * Once all workers have connected, dispatcher can exit its loop
+ */
+static void __last_worker_cleanup(uv_multiplex_worker_t* worker)
+{
+    uv_mutex_lock(&worker->m->lock);
+    worker->m->nconnected += 1;
+    if (worker->m->nconnected == worker->m->nworkers)
+    {
+        uv_close((uv_handle_t*)&worker->m->pipe, NULL);
+        uv_close((uv_handle_t*)worker->m->listener, NULL);
+    }
+    uv_mutex_unlock(&worker->m->lock);
+}
+
+/**
  * Worker will get listen handle from dispatcher
  */
 static void __get_listen_handle(uv_loop_t* loop,
                                 uv_multiplex_worker_t* worker)
 {
-    int e;
-
-    e = uv_pipe_init(loop, &worker->pipe, 1);
+    int e = uv_pipe_init(loop, &worker->pipe, 1);
     if (0 != e)
     {
         fprintf(stderr, "%s\n", uv_strerror(e));
@@ -107,6 +114,8 @@ static void __get_listen_handle(uv_loop_t* loop,
                     __on_ipc_connect);
 
     uv_run(loop, UV_RUN_DEFAULT);
+
+    __last_worker_cleanup(worker);
 }
 
 static void __worker(void* _worker)
@@ -115,8 +124,9 @@ static void __worker(void* _worker)
 
     /* Wait until the main thread is ready. */
     uv_sem_wait(&worker->sem);
+    uv_sem_destroy(&worker->sem);
     __get_listen_handle(&worker->loop, worker);
-    uv_sem_post(&worker->sem);
+
     worker->m->worker_start(&worker->listener);
 }
 

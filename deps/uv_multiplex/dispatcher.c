@@ -30,6 +30,7 @@ static void __ipc_close_cb(uv_handle_t* handle)
  */
 static void __on_ipc_write(uv_write_t* req, int status)
 {
+    assert(0 == status);
     ipc_peer_t* ctx = container_of(req, ipc_peer_t, write_req);
     uv_close((uv_handle_t*)&ctx->peer_handle, __ipc_close_cb);
 }
@@ -46,10 +47,9 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
 
     ipc_peer_t* pc = calloc(1, sizeof(*pc));
 
-    if (pipe->type == UV_TCP)
-        e = uv_tcp_init(pipe->loop, (uv_tcp_t*)&pc->peer_handle);
-    else if (pipe->type == UV_NAMED_PIPE)
-        e = uv_pipe_init(pipe->loop, (uv_pipe_t*)&pc->peer_handle, 1);
+    assert(pipe->type == UV_NAMED_PIPE);
+
+    e = uv_pipe_init(pipe->loop, (uv_pipe_t*)&pc->peer_handle, 1);
     if (e != 0)
     {
         fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
@@ -74,8 +74,6 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
         fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
         abort();
     }
-
-    //uv_close((uv_handle_t*) pipe, NULL);
 }
 
 int uv_multiplex_dispatch(uv_multiplex_t* m)
@@ -112,10 +110,16 @@ int uv_multiplex_dispatch(uv_multiplex_t* m)
     for (i = 0; i < m->nworkers; i++)
         uv_sem_post(&m->workers[i].sem);
 
-    assert(0 == uv_run(loop, UV_RUN_DEFAULT));
-    uv_close((uv_handle_t*)&m->listener, NULL);
-    assert(0 == uv_run(loop, UV_RUN_DEFAULT));
-
+    /* This loop will finish once all workers have connected
+     * The listen pipe is closed by the last worker */
+    while (1)
+    {
+        uv_mutex_lock(&m->lock);
+        int e = uv_run(loop, UV_RUN_NOWAIT);
+        if (0 == e)
+            break;
+        uv_mutex_unlock(&m->lock);
+    }
     return 0;
 }
 
@@ -126,19 +130,20 @@ int uv_multiplex_init(uv_multiplex_t * m,
                       void (*worker_start)(
                           void* uv_tcp))
 {
-    int i;
-
-    // TODO make sure pipe is not inuse
-
     m->listener = listener;
     m->pipe_name = pipe_name;
     m->nworkers = nworkers;
+    m->nconnected = 0;
     m->workers = calloc(m->nworkers, sizeof(uv_multiplex_worker_t));
     m->worker_start = worker_start;
+    uv_mutex_init(&m->lock);
 
     /* remove named pipe */
     unlink(pipe_name);
 
+    int i;
+
+    /* make workers wait for dispatcher */
     for (i = 0; i < nworkers; i++)
     {
         uv_multiplex_worker_t* worker = &m->workers[i];

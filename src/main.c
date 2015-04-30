@@ -436,6 +436,9 @@ int main(int argc, char **argv)
 
     uv_multiplex_dispatch(&m);
 
+    while (1)
+        pause();
+
 fail:
     return 1;
 }
