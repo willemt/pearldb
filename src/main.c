@@ -60,6 +60,21 @@ static int __http_error(h2o_req_t *req, int status_code, const char* reason)
     return 0;
 }
 
+static int __http_success(h2o_req_t *req, int status_code)
+{
+    static h2o_generator_t generator = { NULL, NULL };
+    static h2o_iovec_t body = { .base = "", .len = 0 };
+    req->res.status = status_code;
+    req->res.reason = "OK";
+    h2o_add_header(&req->pool,
+                   &req->res.headers,
+                   H2O_TOKEN_CONTENT_TYPE,
+                   H2O_STRLIT("text/plain; charset=utf-8"));
+    h2o_start_response(req, &generator);
+    h2o_send(req, &body, 1, 1);
+    return 0;
+}
+
 static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
     MDB_txn *txn;
@@ -95,27 +110,13 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 
 static int __put(h2o_req_t *req, kstr_t* key)
 {
-    static h2o_generator_t generator = { NULL, NULL };
-
     batch_item_t item;
     item.key.mv_data = key->s;
     item.key.mv_size = key->len;
     item.val.mv_data = req->entity.base;
     item.val.mv_size = req->entity.len;
     bmon_offer(&sv->batch, &item);
-
-    h2o_iovec_t body;
-    body.len = 0;
-    req->res.status = 200;
-    req->res.reason = "OK";
-    h2o_add_header(&req->pool,
-                   &req->res.headers,
-                   H2O_TOKEN_CONTENT_TYPE,
-                   H2O_STRLIT("text/plain; charset=utf-8"));
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return 0;
-
+    return __http_success(req, 200);
 fail:
     return __http_error(req, 400, "BAD");
 }
@@ -185,11 +186,7 @@ fail:
 
 static int __delete(h2o_req_t *req, kstr_t* key)
 {
-    static h2o_generator_t generator = { NULL, NULL };
-    h2o_iovec_t body;
     int e;
-
-    body.len = 0;
 
     MDB_txn *txn;
 
@@ -227,11 +224,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
         abort();
     }
 
-    req->res.status = 200;
-    req->res.reason = "OK";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return 0;
+    return __http_success(req, 200);
 fail:
     return __http_error(req, 400, "BAD");
 }
