@@ -66,10 +66,6 @@ static int __http_success(h2o_req_t *req, int status_code)
     static h2o_iovec_t body = { .base = "", .len = 0 };
     req->res.status = status_code;
     req->res.reason = "OK";
-    h2o_add_header(&req->pool,
-                   &req->res.headers,
-                   H2O_TOKEN_CONTENT_TYPE,
-                   H2O_STRLIT("text/plain; charset=utf-8"));
     h2o_start_response(req, &generator);
     h2o_send(req, &body, 1, 1);
     return 0;

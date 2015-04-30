@@ -71,7 +71,6 @@ We use PUT instead of POST for putting a key-value pair.
    Date: ..., ... .... ........ GMT 
    Server: h2o/1.0.0
    Connection: keep-alive
-   content-type: text/plain; charset=utf-8
    transfer-encoding: chunked
 
 Now we can finally retrieve our data:

@@ -33,7 +33,7 @@ static void __on_ipc_read(uv_stream_t* handle,
 
     worker = container_of(handle, uv_multiplex_worker_t, pipe);
 
-    assert(1 == uv_pipe_pending_count((uv_pipe_t*)handle));
+    //assert(1 == uv_pipe_pending_count((uv_pipe_t*)handle));
 
     uv_handle_type type = uv_pipe_pending_type((uv_pipe_t*)handle);
 
