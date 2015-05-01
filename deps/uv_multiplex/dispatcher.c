@@ -120,6 +120,9 @@ int uv_multiplex_dispatch(uv_multiplex_t* m)
             break;
         uv_mutex_unlock(&m->lock);
     }
+
+    unlink(m->pipe_name);
+
     return 0;
 }
 
