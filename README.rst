@@ -10,15 +10,19 @@
 
 What?
 =====
-PearDB is a HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `h2o <https://github.com/h2o/h2o>`_ for HTTP.
+PearDB is a durable HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `H2O <https://github.com/h2o/h2o>`_ for HTTP.
 
 Persistent connections and pipelining are built-in.
 
-Why?
-====
-LMBD allows zero copy. h2o is targeted towards low latency. This means PearDB *could be really fast*.
+Goals
+=====
 
-Because the CRUD is RESTful You could hypothetically use an HTTP cache to scale out reads.
+* Speed
+* Low latency
+* Durability - An HTTP response means the write is on disk
+* Simplicity outside (RESTful inteface)
+* Simplicity inside (succinct codebase)
+* HTTP caching - Because the CRUD is RESTful you could hypothetically use an HTTP reverse proxy cache to scale out reads. You could use multiple caches to create an eventually consistent database
 
 Example usage
 =============
@@ -39,7 +43,9 @@ Starting the server
 
 Get
 ---
-You obtain a value by GET'ng the key. In this case the key is 'x':
+You obtain a value by GET'ng the key.
+
+In this case the key is "x":
 
 .. code-block:: bash
 
@@ -58,7 +64,7 @@ But you get a 404 if it doesn't exist:
 
 Put
 ---
-We use PUT instead of POST for putting a key-value pair.
+We use PUT for creating or updating a key-value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when change has been made to disk.
 
 .. code-block:: bash
 
@@ -73,20 +79,23 @@ We use PUT instead of POST for putting a key-value pair.
    Connection: keep-alive
    transfer-encoding: chunked
 
-Now we can finally retrieve our data:
+PUTs have an immediate change to future GETs. There is full `isolation <https://en.wikipedia.org/wiki/ACID#Isolation>`_, and therefore no `dirty reads <http://en.wikipedia.org/wiki/Isolation_(database_systems)#Dirty_reads>`_.
+
+Now we can finally retrieve our data via a GET:
 
 .. code-block:: bash
 
    http --ignore-stdin 127.0.0.1:8888/x/
 
 .. code-block:: bash
-   :class: dotted
 
    MY VALUE
 
 
 Delete
 ------
+DELETEs are durable - we only respond when change has been made to disk.
+
 .. code-block:: bash
 
    http -h --ignore-stdin DELETE 127.0.0.1:8888/x/
@@ -100,7 +109,7 @@ Delete
    Connection: keep-alive
    transfer-encoding: chunked
 
-Doesn't exist anymore:
+The key doesn't exist anymore:
 
 .. code-block:: bash
 
