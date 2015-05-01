@@ -78,9 +78,9 @@ We use PUT for creating or updating a key-value pair. PUTs are `durable <https:/
    Connection: keep-alive
    transfer-encoding: chunked
 
-Now we can finally retrieve our data via a GET.
-
 PUTs have an immediate change to future GETs. There is full `isolation <https://en.wikipedia.org/wiki/ACID#Isolation>`_, and therefore no `dirty reads <http://en.wikipedia.org/wiki/Isolation_(database_systems)#Dirty_reads>`_.
+
+Now we can finally retrieve our data via a GET:
 
 .. code-block:: bash
 
