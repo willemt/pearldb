@@ -88,11 +88,7 @@ int uv_multiplex_dispatch(uv_multiplex_t* m)
 
     e = uv_pipe_bind(&m->pipe, m->pipe_name);
     if (0 != e)
-    {
-        if (EMFILE == -e)
-            fprintf(stderr, UV_MULTIPLEX_INCREASE_LIMITS);
         fatal(e);
-    }
 
     e = uv_listen((uv_stream_t*)&m->pipe, 128, __on_pipe_connection);
     if (0 != e)
