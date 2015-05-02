@@ -28,6 +28,18 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+#define mdb_fatal(e) { \
+        assert(0 != e); \
+        fprintf(stderr, "%s:%d - err:%d: %s\n", \
+                __FILE__, __LINE__, e, mdb_strerror((e))); \
+        exit(1); }
+
+#define uv_fatal(e) { \
+        assert(0 != e); \
+        fprintf(stderr, "%s:%d - err:%s: %s\n", \
+                __FILE__, __LINE__, uv_err_name((e)), uv_strerror((e))); \
+        exit(1); }
+
 typedef struct
 {
     MDB_val key;
@@ -78,28 +90,19 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
-    {
-        perror("can't create transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     while (0 < heap_count(bq->queue))
     {
         batch_item_t* item = heap_poll(bq->queue);
         e = mdb_put(txn, sv->docs, &item->key, &item->val, 0);
         if (0 != e)
-        {
-            perror("mdm put failed");
-            abort();
-        }
+            mdb_fatal(e);
     }
 
     e = mdb_txn_commit(txn);
     if (0 != e)
-    {
-        perror("can't commit transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     return 0;
 }
@@ -126,10 +129,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
 
     e = mdb_txn_begin(sv->db_env, NULL, MDB_RDONLY, &txn);
     if (0 != e)
-    {
-        perror("can't create transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     MDB_val k = { .mv_size = key->len,
                   .mv_data = key->s };
@@ -143,27 +143,18 @@ static int __get(h2o_req_t *req, kstr_t* key)
     case MDB_NOTFOUND:
         e = mdb_txn_commit(txn);
         if (0 != e)
-        {
-            perror("can't commit transaction");
-            abort();
-        }
+            mdb_fatal(e);
         return __http_error(req, 404, "NOT FOUND");
     default:
         goto fail;
     }
 
     if (0 != e)
-    {
-        perror("mdm get failed");
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_txn_commit(txn);
     if (0 != e)
-    {
-        perror("can't commit transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     body.base = v.mv_data;
     body.len = v.mv_size;
@@ -188,10 +179,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
 
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
-    {
-        perror("can't create transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     MDB_val k = { .mv_size = key->len,
                   .mv_data = key->s };
@@ -204,10 +192,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
     case MDB_NOTFOUND:
         e = mdb_txn_commit(txn);
         if (0 != e)
-        {
-            perror("can't commit transaction");
-            abort();
-        }
+            mdb_fatal(e);
         return __http_error(req, 404, "NOT FOUND");
     default:
         goto fail;
@@ -215,10 +200,7 @@ static int __delete(h2o_req_t *req, kstr_t* key)
 
     e = mdb_txn_commit(txn);
     if (0 != e)
-    {
-        perror("can't commit transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     return __http_success(req, 200);
 fail:
@@ -247,7 +229,8 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path, int size_mb)
+static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path,
+                            int size_mb)
 {
     int e;
 
@@ -255,31 +238,19 @@ static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path, int s
 
     e = mdb_env_create(env);
     if (0 != e)
-    {
-        perror("can't create lmdb env");
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_env_set_mapsize(*env, size_mb * 1024 * 1024);
     if (0 != e)
-    {
-        perror("can't set map size");
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_env_set_maxdbs(*env, 1024);
     if (0 != e)
-    {
-        perror(mdb_strerror(e));
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
     if (0 != e)
-    {
-        perror(mdb_strerror(e));
-        abort();
-    }
+        mdb_fatal(e);
 }
 
 static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
@@ -289,24 +260,15 @@ static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
 
     e = mdb_txn_begin(env, NULL, 0, &txn);
     if (0 != e)
-    {
-        perror("can't create transaction");
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_dbi_open(txn, db_name, MDB_CREATE, dbi);
     if (0 != e)
-    {
-        perror("can't create lmdb db");
-        abort();
-    }
+        mdb_fatal(e);
 
     e = mdb_txn_commit(txn);
     if (0 != e)
-    {
-        perror("can't create transaction");
-        abort();
-    }
+        mdb_fatal(e);
 }
 
 static void __on_accept(uv_stream_t * listener, int status)
@@ -315,27 +277,17 @@ static void __on_accept(uv_stream_t * listener, int status)
     int e;
 
     if (0 != status)
-    {
-        fprintf(stderr, "%s\n", uv_strerror(status));
-        abort();
-    }
+        uv_fatal(status);
 
     uv_tcp_t *conn = malloc(sizeof(*conn));
 
     e = uv_tcp_init(listener->loop, conn);
     if (0 != status)
-    {
-        fprintf(stderr, "%s\n", uv_strerror(e));
-        abort();
-    }
+        uv_fatal(e);
 
     e = uv_accept(listener, (uv_stream_t*)conn);
     if (0 != e)
-    {
-        fprintf(stderr, "%s\n", uv_strerror(e));
-        uv_close((uv_handle_t*)conn, (uv_close_cb)free);
-        abort();
-    }
+        uv_fatal(e);
 
     h2o_socket_t *sock =
         h2o_uv_socket_create((uv_stream_t*)conn, NULL, 0, (uv_close_cb)free);
@@ -354,10 +306,36 @@ static void __worker_start(void* uv_tcp)
 
     e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS, __on_accept);
     if (e != 0)
-        fprintf(stderr, "worker uv_listen:%s\n", uv_strerror(e));
+        uv_fatal(e);
 
     while (1)
         uv_run(listener->loop, UV_RUN_DEFAULT);
+}
+
+static void __print_db_stats(MDB_dbi dbi, MDB_env *env)
+{
+    int e;
+    MDB_stat stat;
+    MDB_txn *txn;
+
+    e = mdb_txn_begin(env, NULL, 0, &txn);
+    if (0 != e)
+        mdb_fatal(e);
+
+    e = mdb_stat(txn, dbi, &stat);
+    if (0 != e)
+        mdb_fatal(e);
+
+    printf("ms_psize: %d\n", stat.ms_psize);
+    printf("ms_depth: %d\n", stat.ms_depth);
+    printf("ms_branch_pages: %ld\n", stat.ms_branch_pages);
+    printf("ms_leaf_pages: %ld\n", stat.ms_leaf_pages);
+    printf("ms_overflow_pages: %ld\n", stat.ms_overflow_pages);
+    printf("ms_entries: %ld\n", stat.ms_entries);
+
+    e = mdb_txn_commit(txn);
+    if (0 != e)
+        mdb_fatal(e);
 }
 
 int main(int argc, char **argv)
@@ -378,6 +356,12 @@ int main(int argc, char **argv)
     sv->nworkers = atoi(opts.workers);
     __db_env_create(&sv->docs, &sv->db_env, opts.path, atoi(opts.db_size));
     __db_create(&sv->docs, sv->db_env, "docs");
+
+    if (opts.stat)
+    {
+        __print_db_stats(sv->docs, sv->db_env);
+        exit(0);
+    }
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
               (void*)batch_item_cmp, __batcher_commit);
@@ -406,10 +390,7 @@ int main(int argc, char **argv)
     uv_ip4_addr("127.0.0.1", atoi(opts.port), &addr);
     e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
     if (e != 0)
-    {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        abort();
-    }
+        uv_fatal(e);
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(pear_thread_t));
 

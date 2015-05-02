@@ -2,6 +2,7 @@ peardb - a key value server
 
 Usage:
   peardb [--daemonize | -a DB_PATH | -p PORT | -w WORKERS | -b NANOS | -s MEGAS]
+  peardb stat
   peardb --help
 
 Options:
