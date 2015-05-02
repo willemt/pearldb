@@ -68,9 +68,7 @@ static void __on_ipc_connect(uv_connect_t* req, int status)
     worker = container_of(req, uv_multiplex_worker_t, connect_req);
 
     if (0 != status)
-    {
         fatal(status);
-    }
 
     e = uv_read_start((uv_stream_t*)&worker->pipe, __on_ipc_alloc,
                       __on_ipc_read);
@@ -85,6 +83,8 @@ static void __last_worker_cleanup(uv_multiplex_worker_t* worker)
 {
     uv_mutex_lock(&worker->m->lock);
     worker->m->nconnected += 1;
+
+    /* We're the last one out, so turn off the lights */
     if (worker->m->nconnected == worker->m->nworkers)
     {
         uv_close((uv_handle_t*)&worker->m->pipe, NULL);
@@ -105,13 +105,15 @@ static void __get_listen_handle(uv_loop_t* loop,
         if (0 != e)
             fatal(e);
 
-        uv_pipe_connect(&worker->connect_req, &worker->pipe,
+        uv_pipe_connect(&worker->connect_req,
+                        &worker->pipe,
                         worker->m->pipe_name,
                         __on_ipc_connect);
 
         uv_run(loop, UV_RUN_DEFAULT);
     }
-    while (worker->listener.loop);
+    /* Try again - it might be that the dispatcher wasn't ready */
+    while (!worker->listener.loop);
 
     __last_worker_cleanup(worker);
 }
@@ -138,10 +140,15 @@ int uv_multiplex_worker_create(uv_multiplex_t* m,
     int e;
     uv_multiplex_worker_t* worker = &m->workers[worker_id];
 
+    worker->listener.data = udata;
+
     e = uv_loop_init(&worker->loop);
     if (0 != e)
         fatal(e);
-    worker->listener.data = udata;
-    uv_thread_create(&worker->thread, __worker, (void*)worker);
+
+    e = uv_thread_create(&worker->thread, __worker, (void*)worker);
+    if (0 != e)
+        fatal(e);
+
     return 0;
 }
