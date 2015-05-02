@@ -36,6 +36,9 @@ struct batch_monitor_s
     uv_thread_t thread;
 
     int (*commit)(batch_monitor_t *m, batch_queue_t* bq);
+
+    /* the last return code of the commit function */
+    int commit_error;
 };
 
 

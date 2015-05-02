@@ -35,7 +35,7 @@ static void __batcher_loop(void *n)
         uv_mutex_unlock(&m->lock);
         return;
     }
-    m->commit(m, bq);
+    m->commit_error = m->commit(m, bq);
     m->curr_idx = (m->curr_idx + 1) % MAX_BATCH_QUEUES;
     uv_mutex_unlock(&m->lock);
     uv_cond_signal(&m->done);
@@ -78,7 +78,7 @@ int bmon_offer(batch_monitor_t* m, void* item)
     /* let one of our fellow batch threads exit */
     uv_cond_signal(&m->done);
 
-    return 0;
+    return m->commit_error;
 }
 
 int bmon_init(batch_monitor_t* batch,

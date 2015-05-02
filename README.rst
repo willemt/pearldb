@@ -34,7 +34,7 @@ Starting the server
 
 .. code-block:: bash
 
-   build/pear -d -p 8888
+   build/pear -d -p 8888 -s 1
    echo daemonizing...
 
 .. code-block:: bash
@@ -90,6 +90,25 @@ Now we can finally retrieve our data via a GET:
 .. code-block:: bash
 
    MY VALUE
+
+It's best practice to specifiy the capacity of the database upfront. Pear does not do automatic resizing. A PUT will fail if it would put the database over capacity.
+
+.. code-block:: bash
+
+   head -c 1000000 /dev/urandom | base64 > tmp_file
+   du -h tmp_file | awk '{ print $1 }'
+   http -h --ignore-stdin PUT 127.0.0.1:8888/1/ x=@tmp_file
+   rm tmp_file
+
+.. code-block:: bash
+   :class: dotted
+
+   1.3M
+   HTTP/1.1 400 NOT ENOUGH SPACE
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   content-length: 0
 
 
 Delete

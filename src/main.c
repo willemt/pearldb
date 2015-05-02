@@ -83,6 +83,9 @@ static int __http_success(h2o_req_t *req, int status_code)
     return 0;
 }
 
+#define BATCHER_ERROR_LEN 128
+char batcher_error[BATCHER_ERROR_LEN];
+
 static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
     MDB_txn *txn;
@@ -96,7 +99,14 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
     {
         batch_item_t* item = heap_poll(bq->queue);
         e = mdb_put(txn, sv->docs, &item->key, &item->val, 0);
-        if (0 != e)
+        if (MDB_MAP_FULL == e)
+        {
+            mdb_txn_abort(txn);
+            while ((item = heap_poll(bq->queue)));
+            snprintf(batcher_error, BATCHER_ERROR_LEN, "NOT ENOUGH SPACE");
+            return -1;
+        }
+        else if (0 != e)
             mdb_fatal(e);
     }
 
@@ -109,15 +119,16 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 
 static int __put(h2o_req_t *req, kstr_t* key)
 {
+    int e;
     batch_item_t item;
     item.key.mv_data = key->s;
     item.key.mv_size = key->len;
     item.val.mv_data = req->entity.base;
     item.val.mv_size = req->entity.len;
-    bmon_offer(&sv->batch, &item);
+    e = bmon_offer(&sv->batch, &item);
+    if (-1 == e)
+        return __http_error(req, 400, batcher_error);
     return __http_success(req, 200);
-fail:
-    return __http_error(req, 400, "BAD");
 }
 
 static int __get(h2o_req_t *req, kstr_t* key)
