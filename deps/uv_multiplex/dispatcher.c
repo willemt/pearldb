@@ -51,17 +51,19 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
 
     e = uv_pipe_init(pipe->loop, (uv_pipe_t*)&pc->peer_handle, 1);
     if (e != 0)
-    {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        abort();
-    }
+        fatal(e);
 
-    e = uv_accept(pipe, (uv_stream_t*)&pc->peer_handle);
-    if (e != 0)
+    do
     {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        abort();
+        e = uv_accept(pipe, (uv_stream_t*)&pc->peer_handle);
+        if (0 == e)
+            break;
+        else if (-e == EAGAIN)
+            return;
+        else
+            fatal(e);
     }
+    while (1);
 
     /* send the listen socket */
     e = uv_write2(&pc->write_req,
@@ -70,40 +72,31 @@ static void __on_pipe_connection(uv_stream_t* pipe, int status)
                   (uv_stream_t*)m->listener,
                   __on_ipc_write);
     if (e != 0)
-    {
-        fprintf(stderr, "uv_tcp_bind:%s\n", uv_strerror(e));
-        abort();
-    }
+        fatal(e);
 }
 
 int uv_multiplex_dispatch(uv_multiplex_t* m)
 {
     int e;
-    uv_loop_t* loop = m->listener->loop;
 
-    assert(loop);
+    assert(m->listener->loop);
 
     /* create pipe for handing off listen socket */
-    e = uv_pipe_init(loop, &m->pipe, 1);
+    e = uv_pipe_init(m->listener->loop, &m->pipe, 1);
     if (0 != e)
-    {
-        fprintf(stderr, "%s\n", uv_strerror(e));
-        abort();
-    }
+        fatal(e);
 
     e = uv_pipe_bind(&m->pipe, m->pipe_name);
     if (0 != e)
     {
-        fprintf(stderr, "%s\n", uv_strerror(e));
-        abort();
+        if (EMFILE == -e)
+            fprintf(stderr, UV_MULTIPLEX_INCREASE_LIMITS);
+        fatal(e);
     }
 
     e = uv_listen((uv_stream_t*)&m->pipe, 128, __on_pipe_connection);
     if (0 != e)
-    {
-        fprintf(stderr, "%s\n", uv_strerror(e));
-        abort();
-    }
+        fatal(e);
 
     int i;
 
@@ -115,7 +108,7 @@ int uv_multiplex_dispatch(uv_multiplex_t* m)
     while (1)
     {
         uv_mutex_lock(&m->lock);
-        int e = uv_run(loop, UV_RUN_NOWAIT);
+        int e = uv_run(m->listener->loop, UV_RUN_NOWAIT);
         if (0 == e)
             break;
         uv_mutex_unlock(&m->lock);

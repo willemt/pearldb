@@ -1,6 +1,30 @@
 #ifndef UV_MULTIPLEX_H
 #define UV_MULTIPLEX_H
 
+#ifndef fatal
+#define fatal(e) { \
+        assert(0 != e); \
+        if (EMFILE == -e) \
+            fprintf(stderr, UV_MULTIPLEX_INCREASE_LIMITS); \
+        fprintf(stderr, "%s:%d - %s: %s\n", \
+                __FILE__, \
+                __LINE__, \
+                uv_err_name((e)), \
+                uv_strerror((e))); \
+        exit(1); }
+#endif
+
+#define UV_MULTIPLEX_INCREASE_LIMITS \
+    "Sorry, please consider increasing file limits\n" \
+    "There aren't enough file descriptors available.\n" \
+    "\n" \
+    "Try this:\n" \
+    "\n" \
+    "Check current limit:\n" \
+    "\tulimit -n\n\n" \
+    "Set new limit:\n" \
+    "\tulimit -n X\n\n"
+
 typedef struct uv_multiplex_worker_s uv_multiplex_worker_t;
 
 typedef struct

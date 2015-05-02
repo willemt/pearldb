@@ -344,6 +344,8 @@ static void __on_accept(uv_stream_t * listener, int status)
 
 static void __worker_start(void* uv_tcp)
 {
+    assert(uv_tcp);
+
     int e;
     uv_tcp_t* listener = uv_tcp;
     pear_thread_t* thread = listener->data;
