@@ -247,7 +247,7 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
+static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path, int size_mb)
 {
     int e;
 
@@ -260,7 +260,7 @@ static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path)
         abort();
     }
 
-    e = mdb_env_set_mapsize(*env, 1048576000);
+    e = mdb_env_set_mapsize(*env, size_mb * 1024 * 1024);
     if (0 != e)
     {
         perror("can't set map size");
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
     }
 
     sv->nworkers = atoi(opts.workers);
-    __db_env_create(&sv->docs, &sv->db_env, opts.path);
+    __db_env_create(&sv->docs, &sv->db_env, opts.path, atoi(opts.db_size));
     __db_create(&sv->docs, sv->db_env, "docs");
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
