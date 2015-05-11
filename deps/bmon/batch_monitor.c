@@ -20,9 +20,12 @@ static void __batcher_loop(void *n)
     batch_monitor_t* m = n;
 
     uv_mutex_lock(&m->lock);
+    /* Wait for work otherwise we'll just spinlock
+     * We don't rely on the nanosleep to reduce CPU load */
+    uv_cond_wait(&m->work_available, &m->lock);
+
     batch_queue_t *bq = &m->queues[m->curr_idx];
-    batch_queue_t *prev_bq =
-        &m->queues[(m->curr_idx + 1) % MAX_BATCH_QUEUES];
+    batch_queue_t *prev_bq = &m->queues[(m->curr_idx + 1) % MAX_BATCH_QUEUES];
     if (0 < prev_bq->puts_waiting || 0 == heap_count(bq->queue))
     {
         struct timespec tim, tim2;
@@ -61,13 +64,14 @@ int bmon_offer(batch_monitor_t* m, void* item)
     batch_queue_t *bq = &m->queues[bq_idx];
     bq->puts_waiting++;
     heap_offer(&bq->queue, item);
+    uv_cond_signal(&m->work_available);
 
     /* wait until our batch queue is emptied by the batch thread */
     while (1)
     {
         if (m->curr_idx != bq_idx)
             break;
-        /* signal wasn't meant for us */
+        /* signal wasn't meant for us, let's wait and give it to someone else */
         uv_cond_signal(&m->done);
         uv_cond_wait(&m->done, &m->lock);
     }
@@ -89,6 +93,7 @@ int bmon_init(batch_monitor_t* batch,
 {
     uv_mutex_init(&batch->lock);
     uv_cond_init(&batch->done);
+    uv_cond_init(&batch->work_available);
     batch->queues[0].queue = heap_new((void*)item_cmp, NULL);
     batch->queues[1].queue = heap_new((void*)item_cmp, NULL);
     batch->nanos = batch_period;

@@ -21,8 +21,11 @@ struct batch_monitor_s
     uv_mutex_t lock;
 
     /* batch has been written
-     * threads can now send HTTP response */
+     * threads can now return from bmon_offer() */
     uv_cond_t done;
+
+    /* there are items ready to write */
+    uv_cond_t work_available;
 
     /* an idle queue, and a busy queue */
     batch_queue_t queues[MAX_BATCH_QUEUES];
