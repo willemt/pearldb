@@ -4,8 +4,20 @@ before_install:
   - sudo pip install rsttst pytest httpie
 script:
   - sudo make libuv
-  - make libh2o && pwd
+  - make libh2o
   - make
   - sudo rsttst README.rst && py.test -vvv
 after_success:
   - coveralls --verbose --exclude include --exclude tests --exclude deps
+env:
+  global:
+   - secure: "lkobo2d1YJHgxgqG1X9NIte8wnz+nZwaO1nngS9cSIGXEWxNZJausJQwtxL/uCzhRZ6sdf0OFF/Ei3VkT+AlTKEjcnz4NV6NpXumDSy0mQVcAEes8IlMfmDVgpCQ5Zo9HVhfHKkjDigfwZrD8GQoVt+zzqIh7UAUgjbR2RCquI8="
+addons:
+  coverity_scan:
+    project:
+      name: "willemt/peardb"
+      description: "Build submitted via Travis CI"
+    notification_email: himself@willemthiart.com
+    build_command_prepend: "sudo make libuv; make libh2o"
+    build_command: "make"
+    branch_pattern: coverity_scan
