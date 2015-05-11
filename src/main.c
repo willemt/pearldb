@@ -218,7 +218,7 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static int __pear(h2o_handler_t * self, h2o_req_t * req)
+static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
 {
     /* get key */
     char* end;
@@ -390,23 +390,22 @@ int main(int argc, char **argv)
     h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
     h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/");
     h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
-    handler->on_req = __pear;
+    handler->on_req = __dispatch;
 
     /* Bind HTTP socket */
     uv_loop_t *loop = uv_default_loop();
-    uv_tcp_t listener;
+    uv_tcp_t listen;
     struct sockaddr_in addr;
     uv_loop_init(loop);
-    uv_tcp_init(loop, &listener);
+    uv_tcp_init(loop, &listen);
     uv_ip4_addr("127.0.0.1", atoi(opts.port), &addr);
-    e = uv_tcp_bind(&listener, (struct sockaddr *)&addr, 0);
+    e = uv_tcp_bind(&listen, (struct sockaddr *)&addr, 0);
     if (e != 0)
         uv_fatal(e);
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(pear_thread_t));
 
-    uv_multiplex_init(&m, &listener, IPC_PIPE_NAME, sv->nworkers,
-                      __worker_start);
+    uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
 
     /* Start workers */
     for (i = 0; i < sv->nworkers; i++)
