@@ -88,6 +88,9 @@ char batcher_error[BATCHER_ERROR_LEN];
 
 static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 {
+    if (0 == heap_count(bq->queue))
+        return 0;
+
     MDB_txn *txn;
     int e;
 
@@ -142,8 +145,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
     if (0 != e)
         mdb_fatal(e);
 
-    MDB_val k = { .mv_size = key->len,
-                  .mv_data = key->s };
+    MDB_val k = { .mv_size = key->len, .mv_data = key->s };
     MDB_val v;
 
     e = mdb_get(txn, sv->docs, &k, &v);
@@ -185,15 +187,13 @@ fail:
 static int __delete(h2o_req_t *req, kstr_t* key)
 {
     int e;
-
     MDB_txn *txn;
 
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
         mdb_fatal(e);
 
-    MDB_val k = { .mv_size = key->len,
-                  .mv_data = key->s };
+    MDB_val k = { .mv_size = key->len, .mv_data = key->s };
 
     e = mdb_del(txn, sv->docs, &k, NULL);
     switch (e)
