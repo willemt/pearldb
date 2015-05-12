@@ -1,9 +1,11 @@
-letsbuildthis:
+lets_build_this:
 	python waf configure
 	python waf build
+.PHONY : default_target
 
 clean:
 	python waf clean
+.PHONY : clean
 
 libh2o:
 	if test -e deps/h2o; \
@@ -14,6 +16,7 @@ libh2o:
 	cd deps/h2o && cmake . -DCMAKE_INCLUDE_PATH=../libuv/include -DLIBUV_LIBRARIES=1
 	cd deps/h2o && make libh2o
 	cp deps/h2o/libh2o.a .
+.PHONY : libh2o
 
 libuv:
 	if test -e deps/libuv; \
@@ -27,6 +30,7 @@ libuv:
 	cp deps/libuv/.libs/libuv.a .
 	#cd deps/libuv && make install
 	#cp /usr/local/lib/libuv.a .
+.PHONY : libuv
 
 usage.c:
 	docopt2ragel USAGE > src/usage.rl
