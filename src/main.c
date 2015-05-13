@@ -260,7 +260,14 @@ static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path,
         mdb_fatal(e);
 
     e = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
-    if (0 != e)
+    if (22 == e)
+    {
+        fprintf(stderr,
+                "ERROR:\tThe current database file path (%s) is not mmap-able\n"
+                "\tPlease consider using a different database path\n", path);
+        exit(1);
+    }
+    else if (0 != e)
         mdb_fatal(e);
 }
 
