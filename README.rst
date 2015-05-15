@@ -34,7 +34,7 @@ Starting the server
 
 .. code-block:: bash
 
-   build/pear -d -p 8888 -s 1
+   sudo build/pear -d -p 80 -s 1
    echo daemonizing...
 
 .. code-block:: bash
@@ -49,7 +49,7 @@ In this case the key is "x":
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1:8888/x/
+   http -h --ignore-stdin 127.0.0.1/x/
 
 But you get a 404 if it doesn't exist:
 
@@ -68,7 +68,7 @@ We use PUT for creating or updating a key-value pair. PUTs are `durable <https:/
 
 .. code-block:: bash
 
-   echo "MY VALUE" | http -h PUT 127.0.0.1:8888/x/
+   echo "MY VALUE" | http -h PUT 127.0.0.1/x/
 
 .. code-block:: bash
    :class: dotted
@@ -85,7 +85,7 @@ Now we can finally retrieve our data via a GET:
 
 .. code-block:: bash
 
-   http --ignore-stdin 127.0.0.1:8888/x/
+   http --ignore-stdin 127.0.0.1/x/
 
 .. code-block:: bash
 
@@ -97,7 +97,7 @@ It's best practice to specifiy the capacity of the database upfront. Pear does n
 
    head -c 1000000 /dev/urandom | base64 > tmp_file
    du -h tmp_file | awk '{ print $1 }'
-   http -h --ignore-stdin PUT 127.0.0.1:8888/1/ x=@tmp_file
+   http -h --ignore-stdin PUT 127.0.0.1/1/ x=@tmp_file
    rm tmp_file
 
 .. code-block:: bash
@@ -117,7 +117,7 @@ DELETEs are durable - we only respond when change has been made to disk.
 
 .. code-block:: bash
 
-   http -h --ignore-stdin DELETE 127.0.0.1:8888/x/
+   http -h --ignore-stdin DELETE 127.0.0.1/x/
 
 .. code-block:: bash
    :class: dotted
@@ -132,7 +132,7 @@ The key doesn't exist anymore:
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1:8888/x/
+   http -h --ignore-stdin 127.0.0.1/x/
 
 .. code-block:: bash
    :class: dotted
