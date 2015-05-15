@@ -29,12 +29,12 @@ Example usage
 
 All examples below make use of the excellent `httpie <https://github.com/jakubroztocil/httpie>`_
 
-Starting the server
--------------------
+Starting
+--------
 
 .. code-block:: bash
 
-   sudo build/pear -d -p 80 -s 1
+   sudo build/pear --daemonize --port 80 --db_size 1
    echo daemonizing...
 
 .. code-block:: bash
@@ -140,6 +140,19 @@ The key doesn't exist anymore:
    Server: h2o/1.0.0
    Connection: keep-alive
    content-length: 0
+
+Shutting down
+-------------
+
+.. code-block:: bash
+
+   cat /var/run/pear.pid | sudo xargs kill -9
+   echo shutdown
+
+.. code-block:: bash
+   :class: dotted
+
+   shutdown
 
 Building
 ========

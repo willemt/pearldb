@@ -1,7 +1,7 @@
 peardb - a key value server
 
 Usage:
-  peardb [--daemonize | -a DB_PATH | -p PORT | -w WORKERS | -b NANOS | -s MEGAS]
+  peardb [--daemonize | -a DB_PATH | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]
   peardb stat
   peardb --help
 
@@ -12,4 +12,5 @@ Options:
   -w --workers WORKERS     Number of worker threads [default: 8]
   -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]
   -s --db_size MEGAS       Size of database in megabytes [default: 1000]
+  -i --pid_file PID_FILE   Pid file [default: /var/run/pear.pid]
   -h --help                Prints a short usage summary.

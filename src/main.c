@@ -105,7 +105,8 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
         if (MDB_MAP_FULL == e)
         {
             mdb_txn_abort(txn);
-            while ((item = heap_poll(bq->queue)));
+            while ((item = heap_poll(bq->queue)))
+                ;
             snprintf(batcher_error, BATCHER_ERROR_LEN, "NOT ENOUGH SPACE");
             return -1;
         }
@@ -389,6 +390,19 @@ int main(int argc, char **argv)
         int ret = daemon(1, 0);
         if (-1 == ret)
             abort();
+
+        if (opts.pid_file)
+        {
+            FILE *fp = fopen(opts.pid_file, "wt");
+            if (fp == NULL)
+            {
+                fprintf(stderr, "failed to open pid file:%s:%s\n",
+                        opts.pid_file, strerror(errno));
+                abort();
+            }
+            fprintf(fp, "%d\n", (int)getpid());
+            fclose(fp);
+        }
     }
     else
         signal(SIGPIPE, SIG_IGN);
