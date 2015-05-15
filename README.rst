@@ -45,13 +45,11 @@ Get
 ---
 You obtain a value by GET'ng the key.
 
-In this case the key is "x":
+In this case the key is "x". But you get a 404 if it doesn't exist.
 
 .. code-block:: bash
 
    http -h --ignore-stdin 127.0.0.1/x/
-
-But you get a 404 if it doesn't exist:
 
 .. code-block:: bash
    :class: dotted
