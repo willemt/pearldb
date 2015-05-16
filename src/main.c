@@ -13,6 +13,7 @@
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
+#include "lmdb_helpers.h"
 #include "kstr.h"
 #include "heap.h"
 #include "assert.h"
@@ -24,12 +25,6 @@
 #include "usage.c"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
-
-#define mdb_fatal(e) { \
-        assert(0 != e); \
-        fprintf(stderr, "%s:%d - err:%d: %s\n", \
-                __FILE__, __LINE__, e, mdb_strerror((e))); \
-        exit(1); }
 
 #define uv_fatal(e) { \
         assert(0 != e); \
@@ -43,7 +38,7 @@ typedef struct
     MDB_val val;
 } batch_item_t;
 
-int batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
+static int __batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
 {
     return strncmp(a->key.mv_data, b->key.mv_data,
                    min(a->key.mv_size, b->key.mv_size));
@@ -238,55 +233,6 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __db_env_create(MDB_dbi *dbi, MDB_env **env, const char* path,
-                            int size_mb)
-{
-    int e;
-
-    mkdir(path, 0777);
-
-    e = mdb_env_create(env);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_env_set_mapsize(*env, size_mb * 1024 * 1024);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_env_set_maxdbs(*env, 1024);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_env_open(*env, path,  MDB_WRITEMAP, 0664);
-    if (22 == e)
-    {
-        fprintf(stderr,
-                "ERROR:\tThe current database file path (%s) is not mmap-able\n"
-                "\tPlease consider using a different database path\n", path);
-        exit(1);
-    }
-    else if (0 != e)
-        mdb_fatal(e);
-}
-
-static void __db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name)
-{
-    int e;
-    MDB_txn *txn;
-
-    e = mdb_txn_begin(env, NULL, 0, &txn);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_dbi_open(txn, db_name, MDB_CREATE, dbi);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_txn_commit(txn);
-    if (0 != e)
-        mdb_fatal(e);
-}
-
 static void __on_accept(uv_stream_t * listener, int status)
 {
     pear_thread_t* thread = listener->data;
@@ -328,32 +274,6 @@ static void __worker_start(void* uv_tcp)
         uv_run(listener->loop, UV_RUN_DEFAULT);
 }
 
-static void __print_db_stats(MDB_dbi dbi, MDB_env *env)
-{
-    int e;
-    MDB_stat stat;
-    MDB_txn *txn;
-
-    e = mdb_txn_begin(env, NULL, 0, &txn);
-    if (0 != e)
-        mdb_fatal(e);
-
-    e = mdb_stat(txn, dbi, &stat);
-    if (0 != e)
-        mdb_fatal(e);
-
-    printf("ms_psize: %d\n", stat.ms_psize);
-    printf("ms_depth: %d\n", stat.ms_depth);
-    printf("ms_branch_pages: %ld\n", stat.ms_branch_pages);
-    printf("ms_leaf_pages: %ld\n", stat.ms_leaf_pages);
-    printf("ms_overflow_pages: %ld\n", stat.ms_overflow_pages);
-    printf("ms_entries: %ld\n", stat.ms_entries);
-
-    e = mdb_txn_commit(txn);
-    if (0 != e)
-        mdb_fatal(e);
-}
-
 int main(int argc, char **argv)
 {
     int e, i;
@@ -370,17 +290,17 @@ int main(int argc, char **argv)
     }
 
     sv->nworkers = atoi(opts.workers);
-    __db_env_create(&sv->docs, &sv->db_env, opts.path, atoi(opts.db_size));
-    __db_create(&sv->docs, sv->db_env, "docs");
+    mdb_db_env_create(&sv->docs, &sv->db_env, MDB_WRITEMAP, opts.path, atoi(opts.db_size));
+    mdb_db_create(&sv->docs, sv->db_env, "docs");
 
     if (opts.stat)
     {
-        __print_db_stats(sv->docs, sv->db_env);
+        mdb_print_db_stats(sv->docs, sv->db_env);
         exit(0);
     }
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
-              (void*)batch_item_cmp, __batcher_commit);
+              (void*)__batch_item_cmp, __batcher_commit);
 
     if (opts.daemonize)
     {

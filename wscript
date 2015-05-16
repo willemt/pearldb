@@ -42,6 +42,7 @@ def build(bld):
 
     clibs = """
         lmdb
+        lmdb_helpers
         container_of
         uv_multiplex
         bmon
