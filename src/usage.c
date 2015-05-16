@@ -18,6 +18,7 @@ typedef struct
     /* options */
     char* batch_period;
     char* db_size;
+    char* host;
     char* path;
     char* pid_file;
     char* port;
@@ -37,58 +38,62 @@ struct params
 };
 
 
-#line 75 "src/usage.rl"
+#line 78 "src/usage.rl"
 
 
 
-#line 45 "src/usage.c"
+#line 46 "src/usage.c"
 static const char _params_actions[] = {
 	0, 1, 0, 1, 3, 1, 4, 1, 
 	5, 2, 1, 6, 2, 1, 7, 2, 
 	1, 8, 2, 1, 9, 2, 1, 10, 
-	2, 1, 11, 2, 2, 0
+	2, 1, 11, 2, 1, 12, 2, 2, 
+	0
 };
 
 static const char _params_key_offsets[] = {
-	0, 0, 9, 14, 15, 16, 17, 18, 
-	19, 20, 21, 22, 23, 24, 25, 26, 
-	27, 28, 36, 40, 42, 43, 44, 45, 
-	46, 47, 48, 49, 50, 51, 52, 53, 
-	54, 55, 56, 57, 58, 61, 62, 63, 
-	64, 65, 66, 67, 68, 69, 70, 71, 
-	72, 73, 74, 75, 76, 77, 78, 79, 
-	80, 81, 82, 83, 84, 85, 86, 87, 
-	88, 89, 90, 91, 92, 93, 94, 95, 
-	96, 97, 99, 100
+	0, 0, 10, 15, 16, 17, 18, 19, 
+	20, 21, 22, 23, 24, 25, 26, 27, 
+	28, 29, 38, 43, 45, 46, 47, 48, 
+	49, 50, 51, 52, 53, 54, 55, 56, 
+	57, 58, 59, 60, 61, 62, 63, 64, 
+	65, 66, 67, 70, 71, 72, 73, 74, 
+	75, 76, 77, 78, 79, 80, 81, 82, 
+	83, 84, 85, 86, 87, 88, 89, 90, 
+	91, 92, 93, 94, 95, 96, 97, 98, 
+	100, 101, 102, 103, 104, 105, 106, 107, 
+	109, 110
 };
 
 static const char _params_trans_keys[] = {
 	45, 97, 98, 100, 104, 105, 112, 115, 
-	119, 98, 100, 104, 112, 119, 97, 116, 
-	99, 104, 95, 112, 101, 114, 105, 111, 
-	100, 0, 0, 0, 45, 97, 98, 100, 
-	105, 112, 115, 119, 98, 100, 112, 119, 
-	97, 98, 101, 109, 111, 110, 105, 122, 
-	101, 0, 95, 115, 105, 122, 101, 0, 
-	0, 0, 97, 105, 111, 116, 104, 0, 
-	0, 0, 100, 95, 102, 105, 108, 101, 
-	0, 0, 0, 114, 116, 0, 0, 0, 
-	111, 114, 107, 101, 114, 115, 0, 0, 
-	0, 101, 108, 112, 0, 116, 97, 116, 
-	0, 45, 115, 45, 0
+	116, 119, 98, 100, 104, 112, 119, 97, 
+	116, 99, 104, 95, 112, 101, 114, 105, 
+	111, 100, 0, 0, 0, 45, 97, 98, 
+	100, 105, 112, 115, 116, 119, 98, 100, 
+	104, 112, 119, 97, 98, 101, 109, 111, 
+	110, 105, 122, 101, 0, 95, 115, 105, 
+	122, 101, 0, 0, 0, 111, 115, 116, 
+	0, 0, 0, 97, 105, 111, 116, 104, 
+	0, 0, 0, 100, 95, 102, 105, 108, 
+	101, 0, 0, 0, 114, 116, 0, 0, 
+	0, 111, 114, 107, 101, 114, 115, 0, 
+	0, 0, 101, 111, 108, 112, 0, 116, 
+	97, 116, 0, 45, 115, 45, 0
 };
 
 static const char _params_single_lengths[] = {
-	0, 9, 5, 1, 1, 1, 1, 1, 
+	0, 10, 5, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 8, 4, 2, 1, 1, 1, 1, 
-	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 1, 1, 3, 1, 1, 1, 
+	1, 9, 5, 2, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
+	1, 1, 3, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 2, 1, 0
+	1, 1, 1, 1, 1, 1, 1, 2, 
+	1, 1, 1, 1, 1, 1, 1, 2, 
+	1, 0
 };
 
 static const char _params_range_lengths[] = {
@@ -101,45 +106,49 @@ static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0
 };
 
-static const unsigned char _params_index_offsets[] = {
-	0, 0, 10, 16, 18, 20, 22, 24, 
-	26, 28, 30, 32, 34, 36, 38, 40, 
-	42, 44, 53, 58, 61, 63, 65, 67, 
-	69, 71, 73, 75, 77, 79, 81, 83, 
-	85, 87, 89, 91, 93, 97, 99, 101, 
-	103, 105, 107, 109, 111, 113, 115, 117, 
-	119, 121, 123, 125, 127, 129, 131, 133, 
-	135, 137, 139, 141, 143, 145, 147, 149, 
-	151, 153, 155, 157, 159, 161, 163, 165, 
-	167, 169, 172, 174
+static const short _params_index_offsets[] = {
+	0, 0, 11, 17, 19, 21, 23, 25, 
+	27, 29, 31, 33, 35, 37, 39, 41, 
+	43, 45, 55, 61, 64, 66, 68, 70, 
+	72, 74, 76, 78, 80, 82, 84, 86, 
+	88, 90, 92, 94, 96, 98, 100, 102, 
+	104, 106, 108, 112, 114, 116, 118, 120, 
+	122, 124, 126, 128, 130, 132, 134, 136, 
+	138, 140, 142, 144, 146, 148, 150, 152, 
+	154, 156, 158, 160, 162, 164, 166, 168, 
+	171, 173, 175, 177, 179, 181, 183, 185, 
+	188, 190
 };
 
 static const char _params_trans_targs[] = {
-	2, 39, 14, 27, 68, 48, 53, 33, 
-	62, 0, 3, 19, 65, 36, 56, 0, 
-	4, 0, 5, 0, 6, 0, 7, 0, 
-	8, 0, 9, 0, 10, 0, 11, 0, 
-	12, 0, 13, 0, 14, 0, 15, 0, 
-	0, 16, 74, 16, 18, 39, 14, 27, 
-	48, 53, 33, 62, 0, 3, 19, 36, 
-	56, 0, 20, 28, 0, 21, 0, 22, 
-	0, 23, 0, 24, 0, 25, 0, 26, 
-	0, 27, 0, 74, 0, 29, 0, 30, 
-	0, 31, 0, 32, 0, 33, 0, 34, 
-	0, 0, 35, 74, 35, 37, 42, 51, 
-	0, 38, 0, 39, 0, 40, 0, 0, 
-	41, 74, 41, 43, 0, 44, 0, 45, 
-	0, 46, 0, 47, 0, 48, 0, 49, 
-	0, 0, 50, 74, 50, 52, 0, 53, 
-	0, 54, 0, 0, 55, 74, 55, 57, 
-	0, 58, 0, 59, 0, 60, 0, 61, 
-	0, 62, 0, 63, 0, 0, 64, 74, 
-	64, 66, 0, 67, 0, 68, 0, 75, 
-	0, 70, 0, 71, 0, 72, 0, 75, 
-	0, 1, 69, 0, 17, 0, 0, 0
+	2, 45, 14, 27, 74, 54, 59, 33, 
+	39, 68, 0, 3, 19, 71, 42, 62, 
+	0, 4, 0, 5, 0, 6, 0, 7, 
+	0, 8, 0, 9, 0, 10, 0, 11, 
+	0, 12, 0, 13, 0, 14, 0, 15, 
+	0, 0, 16, 80, 16, 18, 45, 14, 
+	27, 54, 59, 33, 39, 68, 0, 3, 
+	19, 36, 42, 62, 0, 20, 28, 0, 
+	21, 0, 22, 0, 23, 0, 24, 0, 
+	25, 0, 26, 0, 27, 0, 80, 0, 
+	29, 0, 30, 0, 31, 0, 32, 0, 
+	33, 0, 34, 0, 0, 35, 80, 35, 
+	37, 0, 38, 0, 39, 0, 40, 0, 
+	0, 41, 80, 41, 43, 48, 57, 0, 
+	44, 0, 45, 0, 46, 0, 0, 47, 
+	80, 47, 49, 0, 50, 0, 51, 0, 
+	52, 0, 53, 0, 54, 0, 55, 0, 
+	0, 56, 80, 56, 58, 0, 59, 0, 
+	60, 0, 0, 61, 80, 61, 63, 0, 
+	64, 0, 65, 0, 66, 0, 67, 0, 
+	68, 0, 69, 0, 0, 70, 80, 70, 
+	72, 37, 0, 73, 0, 74, 0, 81, 
+	0, 76, 0, 77, 0, 78, 0, 81, 
+	0, 1, 75, 0, 17, 0, 0, 0
 };
 
 static const char _params_trans_actions[] = {
@@ -148,33 +157,35 @@ static const char _params_trans_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 27, 9, 1, 0, 0, 0, 0, 
+	0, 0, 30, 9, 1, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 5, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 5, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 27, 12, 1, 0, 0, 0, 
+	0, 0, 0, 0, 0, 30, 12, 1, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	27, 15, 1, 0, 0, 0, 0, 0, 
+	0, 30, 15, 1, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 30, 
+	18, 1, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 27, 18, 1, 0, 0, 0, 
-	0, 0, 0, 0, 27, 21, 1, 0, 
+	0, 30, 21, 1, 0, 0, 0, 0, 
+	0, 0, 0, 30, 24, 1, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 27, 24, 
-	1, 0, 0, 0, 0, 0, 0, 7, 
+	0, 0, 0, 0, 0, 30, 27, 1, 
+	0, 0, 0, 0, 0, 0, 0, 7, 
 	0, 0, 0, 0, 0, 0, 0, 3, 
 	0, 0, 0, 0, 0, 0, 0, 0
 };
 
-static const int params_start = 73;
-static const int params_first_final = 73;
+static const int params_start = 79;
+static const int params_first_final = 79;
 static const int params_error = 0;
 
-static const int params_en_main = 73;
+static const int params_en_main = 79;
 
 
-#line 78 "src/usage.rl"
+#line 81 "src/usage.rl"
 
 static void params_init(struct params *fsm, options_t* opt)
 {
@@ -184,18 +195,19 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->buflen = 0;
     fsm->opt->batch_period = strdup("50000");
     fsm->opt->db_size = strdup("1000");
+    fsm->opt->host = strdup("127.0.0.1");
     fsm->opt->path = strdup("store");
     fsm->opt->pid_file = strdup("/var/run/pear.pid");
     fsm->opt->port = strdup("8888");
     fsm->opt->workers = strdup("8");
 
     
-#line 194 "src/usage.c"
+#line 206 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
 
-#line 93 "src/usage.rl"
+#line 97 "src/usage.rl"
 }
 
 static void params_execute(struct params *fsm, const char *data, int len)
@@ -204,7 +216,7 @@ static void params_execute(struct params *fsm, const char *data, int len)
     const char *pe = data + len;
 
     
-#line 208 "src/usage.c"
+#line 220 "src/usage.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -278,60 +290,64 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 41 "src/usage.rl"
+#line 42 "src/usage.rl"
 	{
         if (fsm->buflen < BUFLEN)
             fsm->buffer[fsm->buflen++] = (*p);
     }
 	break;
 	case 1:
-#line 46 "src/usage.rl"
+#line 47 "src/usage.rl"
 	{
         if (fsm->buflen < BUFLEN)
             fsm->buffer[fsm->buflen++] = 0;
     }
 	break;
 	case 2:
-#line 51 "src/usage.rl"
+#line 52 "src/usage.rl"
 	{ fsm->buflen = 0; }
 	break;
 	case 3:
-#line 53 "src/usage.rl"
+#line 54 "src/usage.rl"
 	{ fsm->opt->stat = 1; }
 	break;
 	case 4:
-#line 54 "src/usage.rl"
+#line 55 "src/usage.rl"
 	{ fsm->opt->daemonize = 1; }
 	break;
 	case 5:
-#line 55 "src/usage.rl"
+#line 56 "src/usage.rl"
 	{ fsm->opt->help = 1; }
 	break;
 	case 6:
-#line 56 "src/usage.rl"
+#line 57 "src/usage.rl"
 	{ fsm->opt->batch_period = strdup(fsm->buffer); }
 	break;
 	case 7:
-#line 57 "src/usage.rl"
+#line 58 "src/usage.rl"
 	{ fsm->opt->db_size = strdup(fsm->buffer); }
 	break;
 	case 8:
-#line 58 "src/usage.rl"
-	{ fsm->opt->path = strdup(fsm->buffer); }
+#line 59 "src/usage.rl"
+	{ fsm->opt->host = strdup(fsm->buffer); }
 	break;
 	case 9:
-#line 59 "src/usage.rl"
-	{ fsm->opt->pid_file = strdup(fsm->buffer); }
+#line 60 "src/usage.rl"
+	{ fsm->opt->path = strdup(fsm->buffer); }
 	break;
 	case 10:
-#line 60 "src/usage.rl"
-	{ fsm->opt->port = strdup(fsm->buffer); }
+#line 61 "src/usage.rl"
+	{ fsm->opt->pid_file = strdup(fsm->buffer); }
 	break;
 	case 11:
-#line 61 "src/usage.rl"
+#line 62 "src/usage.rl"
+	{ fsm->opt->port = strdup(fsm->buffer); }
+	break;
+	case 12:
+#line 63 "src/usage.rl"
 	{ fsm->opt->workers = strdup(fsm->buffer); }
 	break;
-#line 335 "src/usage.c"
+#line 351 "src/usage.c"
 		}
 	}
 
@@ -344,7 +360,7 @@ _again:
 	_out: {}
 	}
 
-#line 101 "src/usage.rl"
+#line 105 "src/usage.rl"
 }
 
 static int params_finish(struct params *fsm)
@@ -361,13 +377,14 @@ static void show_usage()
     fprintf(stdout, "peardb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  peardb [--daemonize | -a DB_PATH | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
+    fprintf(stdout, "  peardb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
     fprintf(stdout, "  peardb stat\n");
     fprintf(stdout, "  peardb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d --daemonize           Run as a daemon.\n");
     fprintf(stdout, "  -a --path DB_PATH        Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -t --host HOST           Host to listen on [default: 127.0.0.1]\n");
     fprintf(stdout, "  -p --port PORT           Port to listen on [default: 8888]\n");
     fprintf(stdout, "  -w --workers WORKERS     Number of worker threads [default: 8]\n");
     fprintf(stdout, "  -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]\n");

@@ -10,9 +10,6 @@
 /* for mkdir */
 #include <sys/stat.h>
 
-/* for nanosleep */
-#include <time.h>
-
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
@@ -419,7 +416,7 @@ int main(int argc, char **argv)
     struct sockaddr_in addr;
     uv_loop_init(loop);
     uv_tcp_init(loop, &listen);
-    uv_ip4_addr("127.0.0.1", atoi(opts.port), &addr);
+    uv_ip4_addr(opts.host, atoi(opts.port), &addr);
     e = uv_tcp_bind(&listen, (struct sockaddr *)&addr, 0);
     if (e != 0)
         uv_fatal(e);

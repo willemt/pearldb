@@ -1,13 +1,14 @@
 peardb - a key value server
 
 Usage:
-  peardb [--daemonize | -a DB_PATH | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]
+  peardb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]
   peardb stat
   peardb --help
 
 Options:
   -d --daemonize           Run as a daemon.
   -a --path DB_PATH        Path where database files will be kept [default: store]
+  -t --host HOST           Host to listen on [default: 127.0.0.1]
   -p --port PORT           Port to listen on [default: 8888]
   -w --workers WORKERS     Number of worker threads [default: 8]
   -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]
