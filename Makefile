@@ -12,7 +12,7 @@ clean:
 
 libh2o:
 	if test -e deps/h2o; \
-	then cd deps/h2o && git pull origin $(LIBH2O_BRANCH); \
+	then cd deps/h2o && rm -f CMakeCache.txt && git pull origin $(LIBH2O_BRANCH) ; \
 	else git clone https://github.com/h2o/h2o deps/h2o; \
 	fi
 	cd deps/h2o && git checkout $(LIBH2O_BRANCH)
