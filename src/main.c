@@ -84,27 +84,34 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
         return 0;
 
     MDB_txn *txn;
+    MDB_cursor* curs;
     int e;
 
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
         mdb_fatal(e);
 
+    e = mdb_cursor_open(txn, sv->docs, &curs);
+    if (0 != e)
+        mdb_fatal(e);
+
     while (0 < heap_count(bq->queue))
     {
         batch_item_t* item = heap_poll(bq->queue);
-        e = mdb_put(txn, sv->docs, &item->key, &item->val, 0);
+        e = mdb_cursor_put(curs, &item->key, &item->val, 0);
         if (MDB_MAP_FULL == e)
         {
+            mdb_cursor_close(curs);
             mdb_txn_abort(txn);
-            while ((item = heap_poll(bq->queue)))
-                ;
+            while ((item = heap_poll(bq->queue)));
             snprintf(batcher_error, BATCHER_ERROR_LEN, "NOT ENOUGH SPACE");
             return -1;
         }
         else if (0 != e)
             mdb_fatal(e);
     }
+
+    mdb_cursor_close(curs);
 
     e = mdb_txn_commit(txn);
     if (0 != e)
