@@ -12,6 +12,8 @@ What?
 =====
 PearDB is a durable HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `H2O <https://github.com/h2o/h2o>`_ for HTTP.
 
+PearDB is completely written in C.
+
 Persistent connections and pipelining are built-in.
 
 Goals
