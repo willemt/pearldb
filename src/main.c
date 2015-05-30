@@ -40,7 +40,7 @@ typedef struct
 
 static int __batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
 {
-    return strncmp(a->key.mv_data, b->key.mv_data,
+    return strncmp(b->key.mv_data, a->key.mv_data,
                    min(a->key.mv_size, b->key.mv_size));
 }
 
