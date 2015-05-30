@@ -16,6 +16,8 @@ PearDB is completely written in C.
 
 Persistent connections and pipelining are built-in.
 
+PearDB uses `bmon <https://github.com/willemt/bmon>`_ to batch LMDB writes.
+
 Goals
 =====
 
@@ -109,7 +111,6 @@ The user must specify the capacity of the database upfront. PearDB does not supp
    Server: h2o/1.0.0
    Connection: keep-alive
    content-length: 0
-
 
 Delete
 ------
