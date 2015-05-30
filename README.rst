@@ -43,9 +43,9 @@ Starting
 
 Get
 ---
-You obtain a value by GET'ng the key.
+We obtain a value by GET'ng the key.
 
-In this case the key is "x". But you get a 404 if it doesn't exist.
+In this case the key is "x". But we get a 404 if it doesn't exist.
 
 .. code-block:: bash
 
@@ -62,7 +62,7 @@ In this case the key is "x". But you get a 404 if it doesn't exist.
 
 Put
 ---
-We use PUT for creating or updating a key-value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when change has been made to disk.
+We use PUT for creating or updating a key value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when change has been made to disk.
 
 .. code-block:: bash
 
@@ -77,7 +77,7 @@ We use PUT for creating or updating a key-value pair. PUTs are `durable <https:/
    Connection: keep-alive
    transfer-encoding: chunked
 
-PUTs have an immediate change to future GETs. There is full `isolation <https://en.wikipedia.org/wiki/ACID#Isolation>`_, and therefore no `dirty reads <http://en.wikipedia.org/wiki/Isolation_(database_systems)#Dirty_reads>`_.
+PUTs have an immediate change on the resource. There is full `isolation <https://en.wikipedia.org/wiki/ACID#Isolation>`_, and therefore no `dirty reads <http://en.wikipedia.org/wiki/Isolation_(database_systems)#Dirty_reads>`_.
 
 Now we can finally retrieve our data via a GET:
 
@@ -89,7 +89,7 @@ Now we can finally retrieve our data via a GET:
 
    MY VALUE
 
-It's best practice to specifiy the capacity of the database upfront. Pear does not do automatic resizing. A PUT will fail if it would put the database over capacity.
+The user must specify the capacity of the database upfront. PearDB does not support automatic resizing. A PUT will fail if it would put the database over capacity.
 
 .. code-block:: bash
 
@@ -111,7 +111,7 @@ It's best practice to specifiy the capacity of the database upfront. Pear does n
 
 Delete
 ------
-DELETEs are durable - we only respond when change has been made to disk.
+DELETEs are durable - we only respond when the change has been made to disk.
 
 .. code-block:: bash
 
@@ -126,7 +126,7 @@ DELETEs are durable - we only respond when change has been made to disk.
    Connection: keep-alive
    transfer-encoding: chunked
 
-The key doesn't exist anymore:
+Of course, after a DELETE the key doesn't exist anymore:
 
 .. code-block:: bash
 
