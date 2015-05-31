@@ -45,6 +45,7 @@ def build(bld):
         lmdb_helpers
         container_of
         uv_multiplex
+        uv_helpers
         bmon
         heap
         """.split()

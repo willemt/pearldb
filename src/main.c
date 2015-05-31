@@ -17,6 +17,7 @@
 #include "kstr.h"
 #include "heap.h"
 #include "assert.h"
+#include "uv_helpers.h"
 #include "uv_multiplex.h"
 #include "batch_monitor.h"
 
@@ -25,12 +26,6 @@
 #include "usage.c"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
-
-#define uv_fatal(e) { \
-        assert(0 != e); \
-        fprintf(stderr, "%s:%d - err:%s: %s\n", \
-                __FILE__, __LINE__, uv_err_name((e)), uv_strerror((e))); \
-        exit(1); }
 
 typedef struct
 {
