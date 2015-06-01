@@ -112,9 +112,28 @@ The user must specify the capacity of the database upfront. PearDB does not supp
    Connection: keep-alive
    content-length: 0
 
+Put without a key
+-----------------
+If you want PearDB to generate a key for you, just use POST. The Location header in the response has the URI of the newly created resource. The URI is the URL safe base64 encoded UUID4.
+
+.. code-block:: bash
+
+   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   location: ...
+   transfer-encoding: chunked
+
+
 Existence
 ---------
-To check for existence use the HEAD method. This is great, because you don't waste network bandwidth sending the document body.
+To check for existence use the HEAD method. This is great, because you don't waste bandwidth sending the document body.
 
 .. code-block:: bash
 

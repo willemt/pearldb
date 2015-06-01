@@ -48,6 +48,7 @@ def build(bld):
         uv_helpers
         bmon
         heap
+        b64
         """.split()
 
     h2o_includes = """

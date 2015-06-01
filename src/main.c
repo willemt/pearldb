@@ -4,6 +4,11 @@
  * found in the LICENSE file.
  */
 
+#include <stdlib.h>
+
+/* for pow */
+#include <math.h>
+
 /* for daemon */
 #include <unistd.h>
 
@@ -20,12 +25,15 @@
 #include "uv_helpers.h"
 #include "uv_multiplex.h"
 #include "batch_monitor.h"
+#include "b64.h"
 
 #include "pear.h"
 
 #include "usage.c"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
+
+#define UUID4_LEN 24
 
 typedef struct
 {
@@ -209,8 +217,46 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
+static int __post(h2o_req_t *req)
+{
+    int e;
+    batch_item_t item;
+    unsigned long int uuid4[2];
+    char uuid4_str[1 + UUID4_LEN + 1];
+
+    /* FIXME: use a better random generator */
+    ((unsigned int*)uuid4)[0] = rand();
+    ((unsigned int*)uuid4)[1] = rand();
+    ((unsigned int*)uuid4)[2] = rand();
+    ((unsigned int*)uuid4)[3] = rand();
+
+    b64_encodes((unsigned char*)&uuid4, sizeof(uuid4), uuid4_str + 1,
+                UUID4_LEN);
+
+    item.key.mv_data = uuid4_str + 1;
+    item.key.mv_size = UUID4_LEN;
+    item.val.mv_data = req->entity.base;
+    item.val.mv_size = req->entity.len;
+    e = bmon_offer(&sv->batch, &item);
+
+    if (-1 == e)
+        return __http_error(req, 400, batcher_error);
+
+    uuid4_str[0] = '/';
+    uuid4_str[UUID4_LEN] = '/';
+    h2o_add_header(&req->pool,
+                   &req->res.headers,
+                   H2O_TOKEN_LOCATION,
+                   uuid4_str,
+                   1 + UUID4_LEN + 1);
+    return __http_success(req, 200);
+}
+
 static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
 {
+    if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
+        return __post(req);
+
     /* get key */
     char* end;
     kstr_t key;
@@ -228,7 +274,6 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
         return __get(req, &key, 0);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("DELETE")))
         return __delete(req, &key);
-
 fail:
     return __http_error(req, 400, "BAD");
 }
@@ -290,7 +335,8 @@ int main(int argc, char **argv)
     }
 
     sv->nworkers = atoi(opts.workers);
-    mdb_db_env_create(&sv->docs, &sv->db_env, MDB_WRITEMAP, opts.path, atoi(opts.db_size));
+    mdb_db_env_create(&sv->docs, &sv->db_env, MDB_WRITEMAP, opts.path,
+                      atoi(opts.db_size));
     mdb_db_create(&sv->docs, sv->db_env, "docs");
 
     if (opts.stat)
@@ -298,6 +344,8 @@ int main(int argc, char **argv)
         mdb_print_db_stats(sv->docs, sv->db_env);
         exit(0);
     }
+
+    srand(time(NULL));
 
     bmon_init(&sv->batch, atoi(opts.batch_period),
               (void*)__batch_item_cmp, __batcher_commit);
