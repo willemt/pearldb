@@ -112,6 +112,22 @@ The user must specify the capacity of the database upfront. PearDB does not supp
    Connection: keep-alive
    content-length: 0
 
+Existence
+---------
+To check for existence use the HEAD method. This is great, because you don't waste network bandwidth sending the document body.
+
+.. code-block:: bash
+
+   http -h --ignore-stdin HEAD 127.0.0.1/x/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+
 Delete
 ------
 DELETEs are durable - we only respond when the change has been made to disk.

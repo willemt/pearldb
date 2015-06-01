@@ -122,14 +122,12 @@ static int __put(h2o_req_t *req, kstr_t* key)
     return __http_success(req, 200);
 }
 
-static int __get(h2o_req_t *req, kstr_t* key)
+static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
 {
     static h2o_generator_t generator = { NULL, NULL };
-    h2o_iovec_t body;
     MDB_txn *txn;
-    int e;
 
-    e = mdb_txn_begin(sv->db_env, NULL, MDB_RDONLY, &txn);
+    int e = mdb_txn_begin(sv->db_env, NULL, MDB_RDONLY, &txn);
     if (0 != e)
         mdb_fatal(e);
 
@@ -147,7 +145,7 @@ static int __get(h2o_req_t *req, kstr_t* key)
             mdb_fatal(e);
         return __http_error(req, 404, "NOT FOUND");
     default:
-        goto fail;
+        return -1;
     }
 
     if (0 != e)
@@ -157,14 +155,19 @@ static int __get(h2o_req_t *req, kstr_t* key)
     if (0 != e)
         mdb_fatal(e);
 
-    body.base = v.mv_data;
-    body.len = v.mv_size;
+    h2o_iovec_t body;
+    if (return_body)
+    {
+        body.base = v.mv_data;
+        body.len = v.mv_size;
+    }
+    else
+    {
+        body.base = "";
+        body.len = 0;
+    }
     req->res.status = 200;
     req->res.reason = "OK";
-    h2o_add_header(&req->pool,
-                   &req->res.headers,
-                   H2O_TOKEN_CONTENT_TYPE,
-                   H2O_STRLIT("text/plain; charset=utf-8"));
     h2o_start_response(req, &generator);
     h2o_send(req, &body, 1, 1);
     return 0;
@@ -220,7 +223,9 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
         return __put(req, &key);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("GET")))
-        return __get(req, &key);
+        return __get(req, &key, 1);
+    else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("HEAD")))
+        return __get(req, &key, 0);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("DELETE")))
         return __delete(req, &key);
 
