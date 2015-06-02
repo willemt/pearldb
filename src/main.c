@@ -34,11 +34,13 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 #define UUID4_LEN 24
+#define WOULD_OVERWRITE MDB_MULTIPLE << 1
 
 typedef struct
 {
     MDB_val key;
     MDB_val val;
+    unsigned int flags;
 } batch_item_t;
 
 static int __batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
@@ -96,8 +98,12 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
     while (0 < heap_count(bq->queue))
     {
         batch_item_t* item = heap_poll(bq->queue);
-        e = mdb_put(txn, sv->docs, &item->key, &item->val, 0);
-        if (MDB_MAP_FULL == e)
+        e = mdb_put(txn, sv->docs, &item->key, &item->val, item->flags);
+        switch (e)
+        {
+        case 0:
+            break;
+        case MDB_MAP_FULL:
         {
             mdb_txn_abort(txn);
             while ((item = heap_poll(bq->queue)))
@@ -105,8 +111,12 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
             snprintf(batcher_error, BATCHER_ERROR_LEN, "NOT ENOUGH SPACE");
             return -1;
         }
-        else if (0 != e)
+        case MDB_KEYEXIST:
+            item->flags = WOULD_OVERWRITE;
+            break;
+        default:
             mdb_fatal(e);
+        }
     }
 
     e = mdb_txn_commit(txn);
@@ -120,6 +130,7 @@ static int __put(h2o_req_t *req, kstr_t* key)
 {
     int e;
     batch_item_t item;
+    item.flags = 0;
     item.key.mv_data = key->s;
     item.key.mv_size = key->len;
     item.val.mv_data = req->entity.base;
@@ -220,30 +231,35 @@ fail:
 static int __post(h2o_req_t *req)
 {
     int e;
-    batch_item_t item;
     unsigned long int uuid4[2];
     char uuid4_str[1 + UUID4_LEN + 1];
 
-    /* FIXME: use a better random generator */
-    ((unsigned int*)uuid4)[0] = rand();
-    ((unsigned int*)uuid4)[1] = rand();
-    ((unsigned int*)uuid4)[2] = rand();
-    ((unsigned int*)uuid4)[3] = rand();
-
-    b64_encodes((unsigned char*)&uuid4, sizeof(uuid4), uuid4_str + 1,
-                UUID4_LEN);
-
+    batch_item_t item;
+    item.flags = MDB_NOOVERWRITE;
     item.key.mv_data = uuid4_str + 1;
     item.key.mv_size = UUID4_LEN;
     item.val.mv_data = req->entity.base;
     item.val.mv_size = req->entity.len;
-    e = bmon_offer(&sv->batch, &item);
 
-    if (-1 == e)
-        return __http_error(req, 400, batcher_error);
+    do
+    {
+        /* FIXME: use a better random generator */
+        ((unsigned int*)uuid4)[0] = rand();
+        ((unsigned int*)uuid4)[1] = rand();
+        ((unsigned int*)uuid4)[2] = rand();
+        ((unsigned int*)uuid4)[3] = rand();
+
+        b64_encodes((unsigned char*)&uuid4, sizeof(uuid4), uuid4_str + 1,
+                    UUID4_LEN);
+
+        e = bmon_offer(&sv->batch, &item);
+        if (-1 == e)
+            return __http_error(req, 400, batcher_error);
+    }
+    while (item.flags == WOULD_OVERWRITE);
 
     uuid4_str[0] = '/';
-    uuid4_str[UUID4_LEN] = '/';
+    uuid4_str[1 + UUID4_LEN] = '/';
     h2o_add_header(&req->pool,
                    &req->res.headers,
                    H2O_TOKEN_LOCATION,

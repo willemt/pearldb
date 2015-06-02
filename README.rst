@@ -118,7 +118,8 @@ If you want PearDB to generate a key for you, just use POST. The Location header
 
 .. code-block:: bash
 
-   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/
+   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/ > posted.txt
+   cat posted.txt
 
 .. code-block:: bash
    :class: dotted
@@ -130,6 +131,14 @@ If you want PearDB to generate a key for you, just use POST. The Location header
    location: ...
    transfer-encoding: chunked
 
+.. code-block:: bash
+
+   http --ignore-stdin -b GET 127.0.0.1$(grep location: posted.txt | sed -e 's/location: //' | tr -d '\r\n')
+
+.. code-block:: bash
+   :class: dotted
+
+   MY POSTED VALUE
 
 Existence
 ---------
