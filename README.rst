@@ -114,7 +114,7 @@ The user must specify the capacity of the database upfront. PearDB does not supp
 
 Put without a key
 -----------------
-If you want PearDB to generate a key for you, just use POST. The Location header in the response has the URI of the newly created resource. The URI is the URL safe base64 encoded UUID4.
+If you want PearDB to generate a key for you, just use POST.
 
 .. code-block:: bash
 
@@ -131,6 +131,8 @@ If you want PearDB to generate a key for you, just use POST. The Location header
    location: ...
    transfer-encoding: chunked
 
+The Location header in the response has the URI of the newly created resource. The URI is the URL safe base64 encoded UUID4.
+
 .. code-block:: bash
 
    http --ignore-stdin -b GET 127.0.0.1$(grep location: posted.txt | sed -e 's/location: //' | tr -d '\r\n')
@@ -139,6 +141,21 @@ If you want PearDB to generate a key for you, just use POST. The Location header
    :class: dotted
 
    MY POSTED VALUE
+
+Providing a URL (ie. key) with POST doesn't make sense, and will result in a 400.
+
+.. code-block:: bash
+
+   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/xxxx/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 400 BAD
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   content-length: 0
 
 Existence
 ---------

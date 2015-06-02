@@ -230,7 +230,6 @@ fail:
 
 static int __post(h2o_req_t *req)
 {
-    int e;
     unsigned long int uuid4[2];
     char uuid4_str[1 + UUID4_LEN + 1];
 
@@ -243,11 +242,11 @@ static int __post(h2o_req_t *req)
 
     do
     {
+        int e, i;
+
         /* FIXME: use a better random generator */
-        ((unsigned int*)uuid4)[0] = rand();
-        ((unsigned int*)uuid4)[1] = rand();
-        ((unsigned int*)uuid4)[2] = rand();
-        ((unsigned int*)uuid4)[3] = rand();
+        for (i=0; i<4; i++)
+            ((unsigned int*)uuid4)[i] = rand();
 
         b64_encodes((unsigned char*)&uuid4, sizeof(uuid4), uuid4_str + 1,
                     UUID4_LEN);
@@ -271,7 +270,8 @@ static int __post(h2o_req_t *req)
 static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
 {
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
-        return __post(req);
+        if (1 == req->path.len)
+            return __post(req);
 
     /* get key */
     char* end;
