@@ -197,7 +197,7 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->opt->db_size = strdup("1000");
     fsm->opt->host = strdup("127.0.0.1");
     fsm->opt->path = strdup("store");
-    fsm->opt->pid_file = strdup("/var/run/pear.pid");
+    fsm->opt->pid_file = strdup("/var/run/pearl.pid");
     fsm->opt->port = strdup("8888");
     fsm->opt->workers = strdup("8");
 
@@ -374,12 +374,12 @@ static int params_finish(struct params *fsm)
 
 static void show_usage()
 {
-    fprintf(stdout, "peardb - a key value server\n");
+    fprintf(stdout, "pearldb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  peardb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
-    fprintf(stdout, "  peardb stat\n");
-    fprintf(stdout, "  peardb --help\n");
+    fprintf(stdout, "  pearldb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
+    fprintf(stdout, "  pearldb stat\n");
+    fprintf(stdout, "  pearldb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d --daemonize           Run as a daemon.\n");
@@ -389,7 +389,7 @@ static void show_usage()
     fprintf(stdout, "  -w --workers WORKERS     Number of worker threads [default: 8]\n");
     fprintf(stdout, "  -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]\n");
     fprintf(stdout, "  -s --db_size MEGAS       Size of database in megabytes [default: 1000]\n");
-    fprintf(stdout, "  -i --pid_file PID_FILE   Pid file [default: /var/run/pear.pid]\n");
+    fprintf(stdout, "  -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]\n");
     fprintf(stdout, "  -h --help                Prints a short usage summary.\n");
     fprintf(stdout, "\n");
 }

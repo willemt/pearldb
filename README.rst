@@ -4,19 +4,19 @@
 .. image:: http://badges.github.io/stability-badges/dist/experimental.svg
    :target: http://github.com/badges/stability-badges
 
-.. image:: https://travis-ci.org/willemt/peardb.png
-   :target: https://travis-ci.org/willemt/peardb
+.. image:: https://travis-ci.org/willemt/pearldb.png
+   :target: https://travis-ci.org/willemt/pearldb
 
 
 What?
 =====
-PearDB is a durable HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `H2O <https://github.com/h2o/h2o>`_ for HTTP.
+PearlDB is a durable HTTP Key-Value pair database. It uses `LMDB <http://symas.com/mdb/>`_ for storing data, and `H2O <https://github.com/h2o/h2o>`_ for HTTP.
 
-PearDB is completely written in C.
+PearlDB is completely written in C.
 
 Persistent connections and pipelining are built-in.
 
-PearDB uses `bmon <https://github.com/willemt/bmon>`_ to batch LMDB writes.
+PearlDB uses `bmon <https://github.com/willemt/bmon>`_ to batch LMDB writes.
 
 Goals
 =====
@@ -38,7 +38,7 @@ Starting
 
 .. code-block:: bash
 
-   sudo build/pear --daemonize --port 80 --db_size 1
+   sudo build/pearl --daemonize --port 80 --db_size 1
    echo daemonizing...
 
 .. code-block:: bash
@@ -93,7 +93,7 @@ Now we can finally retrieve our data via a GET:
 
    MY VALUE
 
-The user must specify the capacity of the database upfront. PearDB does not support automatic resizing. A PUT will fail if it would put the database over capacity.
+The user must specify the capacity of the database upfront. PearlDB does not support automatic resizing. A PUT will fail if it would put the database over capacity.
 
 .. code-block:: bash
 
@@ -114,7 +114,7 @@ The user must specify the capacity of the database upfront. PearDB does not supp
 
 Put without a key
 -----------------
-If you want PearDB to generate a key for you, just use POST.
+If you want PearlDB to generate a key for you, just use POST.
 
 .. code-block:: bash
 
@@ -326,8 +326,8 @@ However, if we use the ETag again it will fail.
 
 Notes about ETags:
 
-- On reboots, PearDB loses all ETag information
-- On launch PearDB generates a random ETag prefix
+- On reboots, PearlDB loses all ETag information
+- On launch PearlDB generates a random ETag prefix
 - ETags are expected to have a short life (ie. < 1 day)
 
 Shutting down
@@ -335,7 +335,7 @@ Shutting down
 
 .. code-block:: bash
 
-   cat /var/run/pear.pid | sudo xargs kill -9
+   cat /var/run/pearl.pid | sudo xargs kill -9
    echo shutdown
 
 .. code-block:: bash

@@ -71,7 +71,7 @@ def build(bld):
         src/main.c
         """.split() + bld.clib_c_files(clibs),
         includes=['./include'] + bld.clib_h_paths(clibs) + h2o_includes + uv_includes + ck_includes,
-        target='pear',
+        target='pearl',
         stlibpath=['.'],
         libpath=[os.getcwd()],
         lib=lib,

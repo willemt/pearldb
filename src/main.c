@@ -28,7 +28,7 @@
 #include "b64.h"
 #include "ck_ht.h"
 
-#include "pear.h"
+#include "pearl.h"
 
 #include "usage.c"
 
@@ -425,7 +425,7 @@ fail:
 
 static void __on_accept(uv_stream_t * listener, int status)
 {
-    pear_thread_t* thread = listener->data;
+    pearl_thread_t* thread = listener->data;
     int e;
 
     if (0 != status)
@@ -452,7 +452,7 @@ static void __worker_start(void* uv_tcp)
 
     int e;
     uv_tcp_t* listener = uv_tcp;
-    pear_thread_t* thread = listener->data;
+    pearl_thread_t* thread = listener->data;
 
     h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
 
@@ -554,14 +554,14 @@ int main(int argc, char **argv)
     if (e != 0)
         uv_fatal(e);
 
-    sv->threads = calloc(sv->nworkers + 1, sizeof(pear_thread_t));
+    sv->threads = calloc(sv->nworkers + 1, sizeof(pearl_thread_t));
 
     uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
 
     /* Start workers */
     for (i = 0; i < sv->nworkers; i++)
     {
-        pear_thread_t* thread = &sv->threads[i + 1];
+        pearl_thread_t* thread = &sv->threads[i + 1];
         uv_multiplex_worker_create(&m, i, thread);
     }
 

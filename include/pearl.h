@@ -1,5 +1,5 @@
-#ifndef PEAR_H
-#define PEAR_H
+#ifndef PEARL_H
+#define PEARL_H
 
 /**
  * Copyright (c) 2015, Willem-Hendrik Thiart
@@ -7,20 +7,20 @@
  * found in the LICENSE file.
  */
 
-#define IPC_PIPE_NAME "pear_server_ipc"
+#define IPC_PIPE_NAME "pearl_server_ipc"
 #define MAX_CONNECTIONS 512
 
 typedef struct
 {
     h2o_context_t ctx;
-} pear_thread_t;
+} pearl_thread_t;
 
 typedef struct
 {
     MDB_dbi docs;
     MDB_env *db_env;
     h2o_globalconf_t cfg;
-    pear_thread_t *threads;
+    pearl_thread_t *threads;
     int nworkers;
     batch_monitor_t batch;
 
@@ -39,4 +39,4 @@ typedef struct
 extern server_t server;
 extern server_t *sv;
 
-#endif /* PEAR_H */
+#endif /* PEARL_H */
