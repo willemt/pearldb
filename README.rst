@@ -99,7 +99,7 @@ The user must specify the capacity of the database upfront. PearlDB does not sup
 
    head -c 1000000 /dev/urandom | base64 > tmp_file
    du -h tmp_file | awk '{ print $1 }'
-   http -h --ignore-stdin PUT 127.0.0.1/1/ x=@tmp_file
+   cat tmp_file | http -h PUT 127.0.0.1/1/
    rm tmp_file
 
 .. code-block:: bash
@@ -107,6 +107,21 @@ The user must specify the capacity of the database upfront. PearlDB does not sup
 
    1.3M
    HTTP/1.1 400 NOT ENOUGH SPACE
+   Date: ..., ... .... ........ GMT 
+   Server: h2o/1.0.0
+   Connection: keep-alive
+   content-length: 0
+
+You can't PUT under nested resources.
+
+.. code-block:: bash
+
+   echo 'DATA' | http -h PUT 127.0.0.1/x/nested_resource/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 400 BAD PATH
    Date: ..., ... .... ........ GMT 
    Server: h2o/1.0.0
    Connection: keep-alive

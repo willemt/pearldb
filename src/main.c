@@ -371,7 +371,7 @@ static void __generate_uuid4(char* uuid4_str)
 
 static int __post(h2o_req_t *req)
 {
-    char uuid4_str[1 + UUID4_LEN + 1];
+    char uuid4_str[1 + UUID4_LEN];
 
     batch_item_t item = {
         .flags       = MDB_NOOVERWRITE,
@@ -391,28 +391,46 @@ static int __post(h2o_req_t *req)
     while (item.flags == WOULD_OVERWRITE);
 
     uuid4_str[0] = '/';
-    uuid4_str[1 + UUID4_LEN] = '/';
     h2o_add_header(&req->pool,
                    &req->res.headers,
                    H2O_TOKEN_LOCATION,
                    uuid4_str,
-                   1 + UUID4_LEN + 1);
+                   1 + UUID4_LEN);
     return __http_success(req, 200);
+}
+
+static int __parse_path(h2o_iovec_t *path, kstr_t *key)
+{
+    key->s = path->base + 1;
+    int bytes_left = path->len - 1;
+    char* nested = memchr(key->s, '/', bytes_left);
+    if (nested)
+    {
+        key->len = nested - key->s;
+        bytes_left -= key->len;
+        if (bytes_left - 1)
+            return -1;
+    }
+    else
+    {
+        key->len = path->len - 1;
+    }
+    return 0;
 }
 
 static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 {
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
+    {
         if (1 == req->path.len)
             return __post(req);
-
-    /* get key */
-    kstr_t key;
-    key.s = req->path.base + 1;
-    char* end = strchr(key.s, '/');
-    if (!end)
         goto fail;
-    key.len = end - key.s;
+    }
+
+    kstr_t key;
+    int e = __parse_path(&req->path, &key);
+    if (-1 == e)
+        return __http_error(req, 400, "BAD PATH");
 
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
         return __put(req, &key);
