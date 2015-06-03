@@ -99,7 +99,7 @@ static h2o_iovec_t __get_if_match_etag(const h2o_req_t* req, const kstr_t* key)
 }
 
 /*
- * Does the client want an ETag?
+ * @return 1 if the client wants an ETag; otherwise 0
  */
 static int __prefers_etag(const h2o_req_t* req)
 {
@@ -119,12 +119,12 @@ static int __prefers_etag(const h2o_req_t* req)
 /**
  * Generate an etag
  */
-static h2o_iovec_t __get_or_create_etag(kstr_t* key, MDB_val *val)
+static int  __get_or_create_etag(kstr_t* key, MDB_val *val, h2o_iovec_t *etagvec)
 {
     int e;
     ck_ht_hash_t hash;
     ck_ht_entry_t entry;
-    char* etag;
+    char* etag = NULL;
 
     ck_ht_hash(&hash, &sv->etags, key->s, key->len);
     ck_ht_entry_key_set(&entry, key->s, key->len);
@@ -140,22 +140,29 @@ static h2o_iovec_t __get_or_create_etag(kstr_t* key, MDB_val *val)
 
             /* TODO: get this memory from a pool */
             etag = malloc(ETAG_LEN);
+            if (!etag)
+                goto fail;
+
             snprintf(etag, ETAG_LEN + 1, "%8.8d%20.20d", sv->etag_prefix, num);
 
             char* my_key = strndup(key->s, key->len);
+            if (!my_key)
+                goto fail;
+
             ck_ht_entry_set(&entry, hash, my_key, key->len, etag);
             e = ck_ht_put_spmc(&sv->etags, hash, &entry);
-            if (e != 0)
-                break;
         }
-        else
-            break;
     }
-    while (1);
+    while (e == 0);
 
-    etag = ck_ht_entry_value(&entry);
+    etagvec->base = ck_ht_entry_value(&entry);
+    etagvec->len = ETAG_LEN;
+    return 0;
 
-    return (h2o_iovec_t) {.base = etag, .len = ETAG_LEN };
+fail:
+    if (etag)
+        free(etag);
+    return -1;
 }
 
 static char* __remove_stored_etag(const kstr_t* key)
@@ -296,7 +303,12 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
 
     if (__prefers_etag(req))
     {
-        h2o_iovec_t etag = __get_or_create_etag(key, &v);
+        h2o_iovec_t etag;
+
+        e = __get_or_create_etag(key, &v, &etag);
+        if (-1 == e)
+            goto fail;
+
         h2o_add_header(&req->pool, &req->res.headers,
                        H2O_TOKEN_ETAG,
                        etag.base, etag.len);
@@ -403,10 +415,9 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
             return __post(req);
 
     /* get key */
-    char* end;
     kstr_t key;
     key.s = req->path.base + 1;
-    end = strchr(key.s, '/');
+    char* end = strchr(key.s, '/');
     if (!end)
         goto fail;
     key.len = end - key.s;
@@ -431,7 +442,7 @@ static void __on_accept(uv_stream_t * listener, int status)
     if (0 != status)
         uv_fatal(status);
 
-    uv_tcp_t *conn = malloc(sizeof(*conn));
+    uv_tcp_t *conn = calloc(1, sizeof(*conn));
 
     e = uv_tcp_init(listener->loop, conn);
     if (0 != status)
@@ -469,6 +480,20 @@ struct ck_malloc __hs_allocators = {
     .realloc = (void*)realloc,
     .free    = (void*)free,
 };
+
+
+static void __write_pid_file(const char* pid_file_name)
+{
+    FILE *fp = fopen(pid_file_name, "wt");
+    if (!fp)
+    {
+        fprintf(stderr, "failed to open pid file:%s:%s\n",
+                pid_file_name, strerror(errno));
+        abort();
+    }
+    fprintf(fp, "%d\n", (int)getpid());
+    fclose(fp);
+}
 
 int main(int argc, char **argv)
 {
@@ -517,22 +542,12 @@ int main(int argc, char **argv)
 
     if (opts.daemonize)
     {
-        int ret = daemon(1, 0);
-        if (-1 == ret)
+        int e = daemon(1, 0);
+        if (-1 == e)
             abort();
 
         if (opts.pid_file)
-        {
-            FILE *fp = fopen(opts.pid_file, "wt");
-            if (fp == NULL)
-            {
-                fprintf(stderr, "failed to open pid file:%s:%s\n",
-                        opts.pid_file, strerror(errno));
-                abort();
-            }
-            fprintf(fp, "%d\n", (int)getpid());
-            fclose(fp);
-        }
+            __write_pid_file(opts.pid_file);
     }
     else
         signal(SIGPIPE, SIG_IGN);
@@ -547,14 +562,26 @@ int main(int argc, char **argv)
     uv_loop_t *loop = uv_default_loop();
     uv_tcp_t listen;
     struct sockaddr_in addr;
-    uv_loop_init(loop);
-    uv_tcp_init(loop, &listen);
-    uv_ip4_addr(opts.host, atoi(opts.port), &addr);
+
+    e = uv_loop_init(loop);
+    if (e != 0)
+        uv_fatal(e);
+
+    e = uv_tcp_init(loop, &listen);
+    if (e != 0)
+        uv_fatal(e);
+
+    e = uv_ip4_addr(opts.host, atoi(opts.port), &addr);
+    if (e != 0)
+        uv_fatal(e);
+
     e = uv_tcp_bind(&listen, (struct sockaddr *)&addr, 0);
     if (e != 0)
         uv_fatal(e);
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(pearl_thread_t));
+    if (!sv->threads)
+        exit(-1);
 
     uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
 
