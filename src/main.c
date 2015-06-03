@@ -35,10 +35,10 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 #define UUID4_LEN 24
-#define WOULD_OVERWRITE MDB_MULTIPLE << 1
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
+#define WOULD_OVERWRITE MDB_MULTIPLE << 1
 
 typedef struct
 {
@@ -47,7 +47,8 @@ typedef struct
     unsigned int flags;
 } batch_item_t;
 
-static int __batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
+static int __batch_item_cmp(const batch_item_t* a, const batch_item_t* b,
+                            const void* udata)
 {
     return strncmp(b->key.mv_data, a->key.mv_data,
                    min(a->key.mv_size, b->key.mv_size));
@@ -56,7 +57,8 @@ static int __batch_item_cmp(batch_item_t* a, batch_item_t* b, void* udata)
 server_t server;
 server_t *sv = &server;
 
-static int __http_error(h2o_req_t *req, int status_code, const char* reason)
+static int __http_error(h2o_req_t *req, const int status_code,
+                        const char* reason)
 {
     static h2o_generator_t generator = { NULL, NULL };
     static h2o_iovec_t body = { .base = "", .len = 0 };
@@ -73,7 +75,7 @@ static int __http_error(h2o_req_t *req, int status_code, const char* reason)
     return 0;
 }
 
-static int __http_success(h2o_req_t *req, int status_code)
+static int __http_success(h2o_req_t *req, const int status_code)
 {
     static h2o_generator_t generator = { NULL, NULL };
     static h2o_iovec_t body = { .base = "", .len = 0 };
@@ -84,10 +86,8 @@ static int __http_success(h2o_req_t *req, int status_code)
     return 0;
 }
 
-/**
- * Get the ETag that the request wants us to do the If-Match on
- */
-static h2o_iovec_t __get_if_match_etag(const h2o_req_t* req, const kstr_t* key)
+static h2o_iovec_t __get_if_match_header_value(const h2o_req_t* req,
+                                               const kstr_t* key)
 {
     ssize_t header =
         h2o_find_header(&req->headers, H2O_TOKEN_IF_MATCH, SIZE_MAX);
@@ -98,7 +98,7 @@ static h2o_iovec_t __get_if_match_etag(const h2o_req_t* req, const kstr_t* key)
     return req->headers.entries[header].value;
 }
 
-/*
+/**
  * @return 1 if the client wants an ETag; otherwise 0
  */
 static int __prefers_etag(const h2o_req_t* req)
@@ -116,10 +116,8 @@ static int __prefers_etag(const h2o_req_t* req)
     return 0;
 }
 
-/**
- * Generate an etag
- */
-static int  __get_or_create_etag(kstr_t* key, MDB_val *val, h2o_iovec_t *etagvec)
+static int __get_or_create_etag(const kstr_t* key, const MDB_val *val,
+                                h2o_iovec_t *etagvec)
 {
     int e;
     ck_ht_hash_t hash;
@@ -167,39 +165,25 @@ fail:
 
 static char* __remove_stored_etag(const kstr_t* key)
 {
-    int e;
     ck_ht_hash_t hash;
     ck_ht_entry_t entry;
 
     ck_ht_entry_key_set(&entry, key->s, key->len);
     ck_ht_hash(&hash, &sv->etags, key->s, key->len);
-    e = ck_ht_remove_spmc(&sv->etags, hash, &entry);
+    int e = ck_ht_remove_spmc(&sv->etags, hash, &entry);
     if (1 == e)
         return ck_ht_entry_value(&entry);
     return NULL;
 }
 
-static int __etag_conditional_put(h2o_req_t *req, const kstr_t* key)
+static int __should_etag_conditional_put_succeed(const h2o_req_t *req,
+                                                 const kstr_t* key,
+                                                 const char* server_etag,
+                                                 const h2o_iovec_t* client_etag)
 {
-    h2o_iovec_t etag = __get_if_match_etag(req, key);
-    char* my_etag = __remove_stored_etag(key);
-
-    if (0 < etag.len)
-    {
-        if (!my_etag ||
-            etag.len < ETAG_LEN ||
-            0 != strncmp(my_etag, etag.base, ETAG_LEN))
-        {
-            __http_error(req, 412, "BAD ETAG");
-            return -1;
-        }
-    }
-
-    /* TODO: release memory back into a pool */
-    if (my_etag)
-        free(my_etag);
-
-    return 0;
+    return client_etag->len == ETAG_LEN &&
+           server_etag &&
+           0 == strncmp(server_etag, client_etag->base, ETAG_LEN);
 }
 
 #define BATCHER_ERROR_LEN 128
@@ -211,9 +195,8 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
         return 0;
 
     MDB_txn *txn;
-    int e;
 
-    e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+    int e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
         mdb_fatal(e);
 
@@ -250,19 +233,28 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
 
 static int __put(h2o_req_t *req, kstr_t* key)
 {
-    int e;
+    char* sv_etag = __remove_stored_etag(key);
+    h2o_iovec_t cli_etag = __get_if_match_header_value(req, key);
+    if (0 < cli_etag.len &&
+        !__should_etag_conditional_put_succeed(req, key, sv_etag, &cli_etag))
+    {
+        if (sv_etag)
+            free(sv_etag);
+        return __http_error(req, 412, "BAD ETAG");
+    }
 
-    e = __etag_conditional_put(req, key);
-    if (0 != e)
-        return 0;
+    if (sv_etag)
+        free(sv_etag);
 
-    batch_item_t item;
-    item.flags = 0;
-    item.key.mv_data = key->s;
-    item.key.mv_size = key->len;
-    item.val.mv_data = req->entity.base;
-    item.val.mv_size = req->entity.len;
-    e = bmon_offer(&sv->batch, &item);
+    batch_item_t item = {
+        .flags       = 0,
+        .key.mv_data = key->s,
+        .key.mv_size = key->len,
+        .val.mv_data = req->entity.base,
+        .val.mv_size = req->entity.len,
+    };
+
+    int e = bmon_offer(&sv->batch, &item);
     if (0 != e)
         return __http_error(req, 400, batcher_error);
     return __http_success(req, 200);
@@ -291,11 +283,8 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
             mdb_fatal(e);
         return __http_error(req, 404, "NOT FOUND");
     default:
-        return -1;
-    }
-
-    if (0 != e)
         mdb_fatal(e);
+    }
 
     e = mdb_txn_commit(txn);
     if (0 != e)
@@ -339,12 +328,11 @@ static int __delete(h2o_req_t *req, kstr_t * key)
 {
     int e;
     MDB_txn *txn;
+    MDB_val k = { .mv_size = key->len, .mv_data = key->s };
 
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
         mdb_fatal(e);
-
-    MDB_val k = { .mv_size = key->len, .mv_data = key->s };
 
     e = mdb_del(txn, sv->docs, &k, NULL);
     switch (e)
@@ -357,7 +345,7 @@ static int __delete(h2o_req_t *req, kstr_t * key)
             mdb_fatal(e);
         return __http_error(req, 404, "NOT FOUND");
     default:
-        goto fail;
+        mdb_fatal(e);
     }
 
     e = mdb_txn_commit(txn);
@@ -369,30 +357,34 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
+static void __generate_uuid4(char* uuid4_str)
+{
+    unsigned long int buf[2];
+    int i;
+
+    /* FIXME: use a better random generator */
+    for (i = 0; i < 4; i++)
+        ((unsigned int*)buf)[i] = rand();
+
+    b64_encodes((unsigned char*)&buf, sizeof(buf), uuid4_str + 1, UUID4_LEN);
+}
+
 static int __post(h2o_req_t *req)
 {
-    unsigned long int uuid4[2];
     char uuid4_str[1 + UUID4_LEN + 1];
 
-    batch_item_t item;
-    item.flags = MDB_NOOVERWRITE;
-    item.key.mv_data = uuid4_str + 1;
-    item.key.mv_size = UUID4_LEN;
-    item.val.mv_data = req->entity.base;
-    item.val.mv_size = req->entity.len;
+    batch_item_t item = {
+        .flags       = MDB_NOOVERWRITE,
+        .key.mv_data = uuid4_str + 1,
+        .key.mv_size = UUID4_LEN,
+        .val.mv_data = req->entity.base,
+        .val.mv_size = req->entity.len,
+    };
 
     do
     {
-        int e, i;
-
-        /* FIXME: use a better random generator */
-        for (i=0; i<4; i++)
-            ((unsigned int*)uuid4)[i] = rand();
-
-        b64_encodes((unsigned char*)&uuid4, sizeof(uuid4), uuid4_str + 1,
-                    UUID4_LEN);
-
-        e = bmon_offer(&sv->batch, &item);
+        __generate_uuid4(uuid4_str);
+        int e = bmon_offer(&sv->batch, &item);
         if (-1 == e)
             return __http_error(req, 400, batcher_error);
     }
@@ -408,7 +400,7 @@ static int __post(h2o_req_t *req)
     return __http_success(req, 200);
 }
 
-static int __dispatch(h2o_handler_t * self, h2o_req_t * req)
+static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 {
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
         if (1 == req->path.len)
@@ -434,7 +426,7 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __on_accept(uv_stream_t * listener, int status)
+static void __on_accept(uv_stream_t * listener, const int status)
 {
     pearl_thread_t* thread = listener->data;
     int e;
@@ -461,26 +453,18 @@ static void __worker_start(void* uv_tcp)
 {
     assert(uv_tcp);
 
-    int e;
     uv_tcp_t* listener = uv_tcp;
     pearl_thread_t* thread = listener->data;
 
     h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
 
-    e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS, __on_accept);
+    int e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS, __on_accept);
     if (e != 0)
         uv_fatal(e);
 
     while (1)
         uv_run(listener->loop, UV_RUN_DEFAULT);
 }
-
-struct ck_malloc __hs_allocators = {
-    .malloc  = (void*)malloc,
-    .realloc = (void*)realloc,
-    .free    = (void*)free,
-};
-
 
 static void __write_pid_file(const char* pid_file_name)
 {
@@ -495,11 +479,27 @@ static void __write_pid_file(const char* pid_file_name)
     fclose(fp);
 }
 
+struct ck_malloc __hs_allocators = {
+    .malloc  = (void*)malloc,
+    .realloc = (void*)realloc,
+    .free    = (void*)free,
+};
+
+static void __start_multiplex_workers(uv_multiplex_t* m)
+{
+    int i;
+
+    for (i = 0; i < sv->nworkers; i++)
+    {
+        pearl_thread_t* thread = &sv->threads[i + 1];
+        uv_multiplex_worker_create(m, i, thread);
+    }
+}
+
 int main(int argc, char **argv)
 {
-    int e, i;
+    int e;
     options_t opts;
-    uv_multiplex_t m;
 
     e = parse_options(argc, argv, &opts);
     if (-1 == e)
@@ -532,13 +532,12 @@ int main(int argc, char **argv)
     e = ck_ht_init(&sv->etags, CK_HT_MODE_BYTESTRING, NULL, &__hs_allocators,
                    128, 0);
     if (!e)
-    {
-        printf("error\n");
         abort();
-    }
 
-    bmon_init(&sv->batch, atoi(opts.batch_period),
-              (void*)__batch_item_cmp, __batcher_commit);
+    bmon_init(&sv->batch,
+              atoi(opts.batch_period),
+              (void*)__batch_item_cmp,
+              __batcher_commit);
 
     if (opts.daemonize)
     {
@@ -560,17 +559,17 @@ int main(int argc, char **argv)
 
     /* Bind HTTP socket */
     uv_loop_t *loop = uv_default_loop();
-    uv_tcp_t listen;
-    struct sockaddr_in addr;
 
     e = uv_loop_init(loop);
     if (e != 0)
         uv_fatal(e);
 
+    uv_tcp_t listen;
     e = uv_tcp_init(loop, &listen);
     if (e != 0)
         uv_fatal(e);
 
+    struct sockaddr_in addr;
     e = uv_ip4_addr(opts.host, atoi(opts.port), &addr);
     if (e != 0)
         uv_fatal(e);
@@ -583,18 +582,12 @@ int main(int argc, char **argv)
     if (!sv->threads)
         exit(-1);
 
+    uv_multiplex_t m;
     uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
-
-    /* Start workers */
-    for (i = 0; i < sv->nworkers; i++)
-    {
-        pearl_thread_t* thread = &sv->threads[i + 1];
-        uv_multiplex_worker_create(&m, i, thread);
-    }
+    __start_multiplex_workers(&m);
+    uv_multiplex_dispatch(&m);
 
     bmon_dispatch(&sv->batch);
-
-    uv_multiplex_dispatch(&m);
 
     while (1)
         pause();
