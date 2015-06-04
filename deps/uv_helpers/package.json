@@ -5,7 +5,7 @@
   "description": "Helpful auxiliary functions for working with libuv",
   "keywords": ["uv"],
   "license": "BSD",
-  "src": ["include/uv_helpers.h"],
+  "src": ["include/uv_helpers.c", "include/uv_helpers.h"],
   "dependencies": {
   }
 }

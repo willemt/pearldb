@@ -15,13 +15,14 @@
 /* for mkdir */
 #include <sys/stat.h>
 
+#include <assert.h>
+
 #include "h2o.h"
 #include "h2o/http1.h"
 #include "lmdb.h"
 #include "lmdb_helpers.h"
 #include "kstr.h"
 #include "heap.h"
-#include "assert.h"
 #include "uv_helpers.h"
 #include "uv_multiplex.h"
 #include "batch_monitor.h"
@@ -575,26 +576,9 @@ int main(int argc, char **argv)
     h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
     handler->on_req = __dispatch;
 
-    /* Bind HTTP socket */
-    uv_loop_t *loop = uv_default_loop();
-
-    e = uv_loop_init(loop);
-    if (e != 0)
-        uv_fatal(e);
-
     uv_tcp_t listen;
-    e = uv_tcp_init(loop, &listen);
-    if (e != 0)
-        uv_fatal(e);
 
-    struct sockaddr_in addr;
-    e = uv_ip4_addr(opts.host, atoi(opts.port), &addr);
-    if (e != 0)
-        uv_fatal(e);
-
-    e = uv_tcp_bind(&listen, (struct sockaddr *)&addr, 0);
-    if (e != 0)
-        uv_fatal(e);
+    uv_bind_listen_socket(&listen, opts.host, atoi(opts.port));
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(pearl_thread_t));
     if (!sv->threads)
