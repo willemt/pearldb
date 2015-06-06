@@ -530,8 +530,7 @@ int main(int argc, char **argv)
     }
 
     sv->nworkers = atoi(opts.workers);
-    mdb_db_env_create(&sv->docs, &sv->db_env, MDB_WRITEMAP, opts.path,
-                      atoi(opts.db_size));
+    mdb_db_env_create(&sv->docs, &sv->db_env, 0, opts.path, atoi(opts.db_size));
     mdb_db_create(&sv->docs, sv->db_env, "docs");
 
     if (opts.stat)
