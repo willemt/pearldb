@@ -64,6 +64,17 @@ In this case the key is "x". But we get a 404 if it doesn't exist.
    Connection: keep-alive
    content-length: 0
 
+You MUST specify a path.
+
+.. code-block:: bash
+
+   http -h --ignore-stdin 127.0.0.1/ | head -n 1
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 400 BAD PATH
+
 Put
 ---
 We use PUT for creating or updating a key value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when change has been made to disk.

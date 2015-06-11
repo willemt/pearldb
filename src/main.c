@@ -430,7 +430,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 
     kstr_t key;
     int e = __parse_path(&req->path, &key);
-    if (-1 == e)
+    if (-1 == e || 0 == key.len)
         return __http_error(req, 400, "BAD PATH");
 
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
