@@ -21,7 +21,7 @@ def build(bld):
     bld.load('clib')
 
     cflags = """
-         -g
+        -g
         -Werror=int-to-pointer-cast
         -Werror=unused-variable
         -Werror=return-type

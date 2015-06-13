@@ -7,7 +7,7 @@ lets_build_this:
 .PHONY : default_target
 
 clean:
-	python waf clean
+	python waf clean || true
 .PHONY : clean
 
 libh2o:
