@@ -28,6 +28,15 @@ Goals
 * Simplicity inside (succinct codebase)
 * HTTP caching - Because the CRUD is RESTful you could hypothetically use an HTTP reverse proxy cache to scale out reads. You could use multiple caches to create an eventually consistent database
 
+Ubuntu Quick Start
+==================
+
+.. code-block:: bash
+
+   sudo add-apt-repository -y ppa:willemt/pearldb
+   sudo apt-get update
+   sudo apt-get install pearldb
+
 Example usage
 =============
 
