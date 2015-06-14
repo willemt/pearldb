@@ -32,6 +32,7 @@ Ubuntu Quick Start
 ==================
 
 .. code-block:: bash
+   :class: ignore
 
    sudo add-apt-repository -y ppa:willemt/pearldb
    sudo apt-get update
