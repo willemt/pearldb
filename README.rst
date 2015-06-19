@@ -70,7 +70,7 @@ In this case the key is "x". But we get a 404 if it doesn't exist.
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -98,7 +98,7 @@ We use PUT for creating or updating a key value pair. PUTs are `durable <https:/
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    transfer-encoding: chunked
 
@@ -129,7 +129,7 @@ The user must specify the capacity of the database upfront. PearlDB does not sup
    1.3M
    HTTP/1.1 400 NOT ENOUGH SPACE
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -144,7 +144,7 @@ You can't PUT under nested resources.
 
    HTTP/1.1 400 BAD PATH
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -162,7 +162,7 @@ If you want PearlDB to generate a key for you, just use POST.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    location: ...
    transfer-encoding: chunked
@@ -189,7 +189,7 @@ Providing a URL (ie. key) with POST doesn't make sense, and will result in a 400
 
    HTTP/1.1 400 BAD
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -206,7 +206,7 @@ To check for existence use the HEAD method. This is great, because you don't was
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
 
 Delete
@@ -222,7 +222,7 @@ DELETEs are durable - we only respond when the change has been made to disk.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    transfer-encoding: chunked
 
@@ -237,7 +237,7 @@ Of course, after a DELETE the key doesn't exist anymore:
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -260,7 +260,7 @@ Imagine two clients trying to update the same key. Client 1 requests an ETag. Th
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    etag: ...
    transfer-encoding: chunked
@@ -278,7 +278,7 @@ If client 1 requests an ETag again, the same ETag is sent:
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    etag: ...
    transfer-encoding: chunked
@@ -294,7 +294,7 @@ Client 2 does a PUT on x. This will invalidate the ETag.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    transfer-encoding: chunked
 
@@ -309,7 +309,7 @@ Client 1 uses a conditional PUT to update "x" using the If-Match tag. Because th
 
    HTTP/1.1 412 BAD ETAG
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 
@@ -325,7 +325,7 @@ Once this happens we can retry the PUT after we do a new GET.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    etag: ...
    transfer-encoding: chunked
@@ -341,7 +341,7 @@ The PUT will succeed because the ETag is still valid.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    transfer-encoding: chunked
 
@@ -356,7 +356,7 @@ However, if we use the ETag again it will fail.
 
    HTTP/1.1 412 BAD ETAG
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.0.0
+   Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
 

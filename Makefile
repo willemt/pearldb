@@ -1,5 +1,5 @@
 LIBUV_BRANCH=v1.2.1
-LIBH2O_BRANCH=rel/v1.0.0
+LIBH2O_BRANCH=v1.3.1
 
 lets_build_this:
 	python waf configure

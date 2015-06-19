@@ -464,7 +464,7 @@ static void __on_accept(uv_stream_t * listener, const int status)
         uv_fatal(e);
 
     h2o_socket_t *sock =
-        h2o_uv_socket_create((uv_stream_t*)conn, NULL, 0, (uv_close_cb)free);
+        h2o_uv_socket_create((uv_stream_t*)conn, (uv_close_cb)free);
     h2o_http1_accept(&thread->ctx, sv->cfg.hosts, sock);
 }
 
@@ -570,7 +570,7 @@ int main(int argc, char **argv)
         signal(SIGPIPE, SIG_IGN);
 
     h2o_config_init(&sv->cfg);
-    h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, "default");
+    h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, h2o_iovec_init(H2O_STRLIT("default")), 65535);
     h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/");
     h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
     handler->on_req = __dispatch;
