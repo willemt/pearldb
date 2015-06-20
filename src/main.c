@@ -280,15 +280,16 @@ static void __get_keys_send(get_keys_generator_t *self, int e, MDB_val* k,
                               min(self->key->len, k->mv_size)))
     {
         h2o_send(req, NULL, 0, 1);
-        return;
     }
-
-    h2o_iovec_t body[2];
-    body[0].base = k->mv_data;
-    body[0].len = k->mv_size;
-    body[1].base = "\n";
-    body[1].len = 1;
-    h2o_send(req, body, 2, 0);
+    else
+    {
+        h2o_iovec_t body[2];
+        body[0].base = k->mv_data;
+        body[0].len = k->mv_size;
+        body[1].base = "\n";
+        body[1].len = 1;
+        h2o_send(req, body, 2, 0);
+    }
 }
 
 static void __get_keys_proceed(h2o_generator_t *_self, h2o_req_t *req)
