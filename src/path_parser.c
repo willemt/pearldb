@@ -3,7 +3,8 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct {
+typedef struct
+{
     int get_keys;
     kstr_t key;
 } parse_result_t;
@@ -15,11 +16,11 @@ struct path_parse
 };
 
 
-#line 39 "src/path_parser.rl"
+#line 32 "src/path_parser.rl"
 
 
 
-#line 23 "src/path_parser.c"
+#line 24 "src/path_parser.c"
 static const char _path_parse_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 2, 
 	1, 2
@@ -91,20 +92,19 @@ static const int path_parse_error = 0;
 static const int path_parse_en_main = 1;
 
 
-#line 42 "src/path_parser.rl"
+#line 35 "src/path_parser.rl"
 
 static void pp_init(struct path_parse *fsm, parse_result_t* result)
 {
     fsm->r = result;
     fsm->r->get_keys = 0;
-
     
 #line 103 "src/path_parser.c"
 	{
 	 fsm->cs = path_parse_start;
 	}
 
-#line 49 "src/path_parser.rl"
+#line 41 "src/path_parser.rl"
 }
 
 static void pp_execute(struct path_parse *fsm, const char *data, size_t len)
@@ -112,9 +112,8 @@ static void pp_execute(struct path_parse *fsm, const char *data, size_t len)
     const char *p = data;
     const char *pe = data + len;
     const char *eof = data + len;
-
     
-#line 118 "src/path_parser.c"
+#line 117 "src/path_parser.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -189,18 +188,14 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 19 "src/path_parser.rl"
-	{
-        fsm->r->key.s = (char*)p;
-    }
+#line 20 "src/path_parser.rl"
+	{ fsm->r->key.s = (char*)p; }
 	break;
 	case 1:
-#line 23 "src/path_parser.rl"
-	{
-        fsm->r->key.len = (size_t)(p - fsm->r->key.s);
-    }
+#line 21 "src/path_parser.rl"
+	{ fsm->r->key.len = (size_t)(p - fsm->r->key.s); }
 	break;
-#line 204 "src/path_parser.c"
+#line 199 "src/path_parser.c"
 		}
 	}
 
@@ -217,18 +212,14 @@ _again:
 	while ( __nacts-- > 0 ) {
 		switch ( *__acts++ ) {
 	case 1:
-#line 23 "src/path_parser.rl"
-	{
-        fsm->r->key.len = (size_t)(p - fsm->r->key.s);
-    }
+#line 21 "src/path_parser.rl"
+	{ fsm->r->key.len = (size_t)(p - fsm->r->key.s); }
 	break;
 	case 2:
-#line 27 "src/path_parser.rl"
-	{
-        fsm->r->get_keys = 1;
-    }
+#line 22 "src/path_parser.rl"
+	{ fsm->r->get_keys = 1; }
 	break;
-#line 232 "src/path_parser.c"
+#line 223 "src/path_parser.c"
 		}
 	}
 	}
@@ -236,7 +227,7 @@ _again:
 	_out: {}
 	}
 
-#line 58 "src/path_parser.rl"
+#line 49 "src/path_parser.rl"
 }
 
 static int pp_finish(struct path_parse *fsm)
@@ -251,12 +242,9 @@ static int pp_finish(struct path_parse *fsm)
 int parse_path(const char *path, size_t len, parse_result_t *result)
 {
     struct path_parse pp;
-
     pp_init(&pp, result);
     pp_execute(&pp, path, len);
     if (pp_finish(&pp) != 1)
         return -1;
-
     return 0;
 }
-
