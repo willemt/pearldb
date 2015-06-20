@@ -33,9 +33,11 @@
 #include "local.h"
 
 #include "usage.c"
+#include "path_parser.c"
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+#define ANYPORT 65535
 #define UUID4_LEN 24
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
@@ -262,6 +264,83 @@ static int __put(h2o_req_t *req, kstr_t* key)
     return __http_success(req, 200);
 }
 
+typedef struct
+{
+    h2o_generator_t super;
+    h2o_req_t *req;
+    MDB_txn *txn;
+    MDB_cursor* curs;
+    kstr_t* key;
+} get_keys_generator_t;
+
+static void __get_keys_send(get_keys_generator_t *self, int e, MDB_val* k,
+                            h2o_req_t *req)
+{
+    if (0 != e || 0 < strncmp(k->mv_data, self->key->s,
+                              min(self->key->len, k->mv_size)))
+    {
+        h2o_send(req, NULL, 0, 1);
+        return;
+    }
+
+    h2o_iovec_t body[2];
+    body[0].base = k->mv_data;
+    body[0].len = k->mv_size;
+    body[1].base = "\n";
+    body[1].len = 1;
+    h2o_send(req, body, 2, 0);
+}
+
+static void __get_keys_proceed(h2o_generator_t *_self, h2o_req_t *req)
+{
+    get_keys_generator_t *self = (void*)_self;
+    MDB_val k, v;
+    __get_keys_send(self,
+                    mdb_cursor_get(self->curs, &k, &v, MDB_NEXT), &k, req);
+}
+
+static int __get_keys(h2o_req_t *req, kstr_t* key)
+{
+    get_keys_generator_t *gen = h2o_mem_alloc_pool(&req->pool, sizeof(*gen));
+    gen->super.proceed = __get_keys_proceed;
+    gen->super.stop = NULL;
+    gen->req = req;
+    gen->key = key;
+
+    req->res.status = 200;
+    req->res.reason = "OK";
+    h2o_start_response(req, &gen->super);
+
+    int e;
+
+    e = mdb_txn_begin(sv->db_env, NULL, MDB_RDONLY, &gen->txn);
+    if (0 != e)
+        mdb_fatal(e);
+
+    e = mdb_cursor_open(gen->txn, sv->docs, &gen->curs);
+    if (0 != e)
+        mdb_fatal(e);
+
+    MDB_val k = { .mv_size = key->len, .mv_data = key->s }, v;
+    /* don't care about output, only setting cursor */
+    e = mdb_cursor_get(gen->curs, &k, &v, MDB_SET);
+    if (0 != e)
+        __get_keys_send(gen, mdb_cursor_get(gen->curs, &k, &v,
+                                            MDB_FIRST), &k, req);
+    else
+        __get_keys_send(gen, e, &k, req);
+
+    mdb_cursor_close(gen->curs);
+
+    e = mdb_txn_commit(gen->txn);
+    if (0 != e)
+        mdb_fatal(e);
+
+    return 0;
+fail:
+    return __http_error(req, 400, "BAD");
+}
+
 static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
 {
     static h2o_generator_t generator = { NULL, NULL };
@@ -401,25 +480,6 @@ static int __post(h2o_req_t *req)
     return __http_success(req, 200);
 }
 
-static int __parse_path(h2o_iovec_t *path, kstr_t *key)
-{
-    key->s = path->base + 1;
-    int bytes_left = path->len - 1;
-    char* nested = memchr(key->s, '/', bytes_left);
-    if (nested)
-    {
-        key->len = nested - key->s;
-        bytes_left -= key->len;
-        if (bytes_left - 1)
-            return -1;
-    }
-    else
-    {
-        key->len = path->len - 1;
-    }
-    return 0;
-}
-
 static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 {
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
@@ -429,19 +489,23 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
         goto fail;
     }
 
-    kstr_t key;
-    int e = __parse_path(&req->path, &key);
-    if (-1 == e || 0 == key.len)
+    parse_result_t r;
+    int e = parse_path(req->path.base, req->path.len, &r);
+    if (-1 == e || 0 == r.key.len)
         return __http_error(req, 400, "BAD PATH");
 
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
-        return __put(req, &key);
+        return __put(req, &r.key);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("GET")))
-        return __get(req, &key, 1);
+    {
+        if (r.get_keys)
+            return __get_keys(req, &r.key);
+        return __get(req, &r.key, 1);
+    }
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("HEAD")))
-        return __get(req, &key, 0);
+        return __get(req, &r.key, 0);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("DELETE")))
-        return __delete(req, &key);
+        return __delete(req, &r.key);
 fail:
     return __http_error(req, 400, "BAD");
 }
@@ -557,13 +621,20 @@ int main(int argc, char **argv)
     else
         signal(SIGPIPE, SIG_IGN);
 
-    h2o_config_init(&sv->cfg);
-    h2o_hostconf_t *hostconf =
-        h2o_config_register_host(&sv->cfg,
-                                 h2o_iovec_init(H2O_STRLIT("default")), 65535);
+    h2o_pathconf_t *pathconf;
+    h2o_handler_t *handler;
+    h2o_hostconf_t *hostconf;
 
-    h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/");
-    h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
+    h2o_config_init(&sv->cfg);
+
+    hostconf = h2o_config_register_host(&sv->cfg,
+                                        h2o_iovec_init(H2O_STRLIT("default")),
+                                        ANYPORT);
+
+    pathconf = h2o_config_register_path(hostconf, "/");
+    h2o_chunked_register(pathconf);
+
+    handler = h2o_create_handler(pathconf, sizeof(*handler));
     handler->on_req = __dispatch;
 
     uv_tcp_t listen;

@@ -114,6 +114,16 @@ Now we can finally retrieve our data via a GET:
 
    MY VALUE
 
+The slash at the end is optional.
+
+.. code-block:: bash
+
+   http --ignore-stdin 127.0.0.1/x
+
+.. code-block:: bash
+
+   MY VALUE
+
 The user must specify the capacity of the database upfront. PearlDB does not support automatic resizing. A PUT will fail if it would put the database over capacity.
 
 .. code-block:: bash
@@ -192,6 +202,40 @@ Providing a URL (ie. key) with POST doesn't make sense, and will result in a 400
    Server: h2o/1.3.1
    Connection: keep-alive
    content-length: 0
+
+Get keys
+--------
+You can get the keys that match a prefix by using the /key/XXX/ nested resource.
+
+.. code-block:: bash
+
+   echo '' | http PUT 127.0.0.1/1/ > /dev/null
+   echo '' | http PUT 127.0.0.1/199/ > /dev/null
+   echo '' | http PUT 127.0.0.1/102/ > /dev/null
+   echo '' | http PUT 127.0.0.1/2/ > /dev/null
+   http GET 127.0.0.1/key/1/
+
+.. code-block:: bash
+   :class: dotted
+
+   1
+   102
+   199
+
+Without a prefix you get all keys.
+
+.. code-block:: bash
+
+   http GET 127.0.0.1/key/
+
+.. code-block:: bash
+   :class: dotted
+
+   1
+   102
+   199
+   2
+   ...
 
 Existence
 ---------
