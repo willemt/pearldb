@@ -13,14 +13,14 @@
 typedef struct
 {
     h2o_context_t ctx;
-} pearl_thread_t;
+} _thread_t;
 
 typedef struct
 {
     MDB_dbi docs;
     MDB_env *db_env;
     h2o_globalconf_t cfg;
-    pearl_thread_t *threads;
+    _thread_t *threads;
     int nworkers;
     batch_monitor_t batch;
 

@@ -28,8 +28,9 @@
 #include "batch_monitor.h"
 #include "b64.h"
 #include "ck_ht.h"
+#include "pidfile.h"
 
-#include "pearl.h"
+#include "local.h"
 
 #include "usage.c"
 
@@ -445,9 +446,9 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __on_accept(uv_stream_t * listener, const int status)
+static void __on_accept(uv_stream_t *listener, const int status)
 {
-    pearl_thread_t* thread = listener->data;
+    _thread_t* thread = listener->data;
     int e;
 
     if (0 != status)
@@ -473,7 +474,7 @@ static void __worker_start(void* uv_tcp)
     assert(uv_tcp);
 
     uv_tcp_t* listener = uv_tcp;
-    pearl_thread_t* thread = listener->data;
+    _thread_t* thread = listener->data;
 
     h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
 
@@ -483,19 +484,6 @@ static void __worker_start(void* uv_tcp)
 
     while (1)
         uv_run(listener->loop, UV_RUN_DEFAULT);
-}
-
-static void __write_pid_file(const char* pid_file_name)
-{
-    FILE *fp = fopen(pid_file_name, "wt");
-    if (!fp)
-    {
-        fprintf(stderr, "failed to open pid file:%s:%s\n",
-                pid_file_name, strerror(errno));
-        abort();
-    }
-    fprintf(fp, "%d\n", (int)getpid());
-    fclose(fp);
 }
 
 struct ck_malloc __hs_allocators = {
@@ -510,7 +498,7 @@ static void __start_multiplex_workers(uv_multiplex_t* m)
 
     for (i = 0; i < sv->nworkers; i++)
     {
-        pearl_thread_t* thread = &sv->threads[i + 1];
+        _thread_t* thread = &sv->threads[i + 1];
         uv_multiplex_worker_create(m, i, thread);
     }
 }
@@ -564,13 +552,16 @@ int main(int argc, char **argv)
             abort();
 
         if (opts.pid_file)
-            __write_pid_file(opts.pid_file);
+            pidfile_write(opts.pid_file);
     }
     else
         signal(SIGPIPE, SIG_IGN);
 
     h2o_config_init(&sv->cfg);
-    h2o_hostconf_t *hostconf = h2o_config_register_host(&sv->cfg, h2o_iovec_init(H2O_STRLIT("default")), 65535);
+    h2o_hostconf_t *hostconf =
+        h2o_config_register_host(&sv->cfg,
+                                 h2o_iovec_init(H2O_STRLIT("default")), 65535);
+
     h2o_pathconf_t *pathconf = h2o_config_register_path(hostconf, "/");
     h2o_handler_t *handler = h2o_create_handler(pathconf, sizeof(*handler));
     handler->on_req = __dispatch;
@@ -579,7 +570,7 @@ int main(int argc, char **argv)
 
     uv_bind_listen_socket(&listen, opts.host, atoi(opts.port));
 
-    sv->threads = calloc(sv->nworkers + 1, sizeof(pearl_thread_t));
+    sv->threads = calloc(sv->nworkers + 1, sizeof(_thread_t));
     if (!sv->threads)
         exit(-1);
 

@@ -1,0 +1,9 @@
+{
+  "name": "pidfile",
+  "version": "0.0.1",
+  "repo": "willemt/pidfile",
+  "description": "Write out a pidfile",
+  "keywords": ["pid", "pidfile"],
+  "license": "BSD",
+  "src": ["pidfile.c", "pidfile.h"]
+}

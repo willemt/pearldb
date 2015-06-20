@@ -41,14 +41,15 @@ def build(bld):
         lib.append('rt')
 
     clibs = """
+        b64
+        bmon
+        container_of
+        heap
         lmdb
         lmdb_helpers
-        container_of
-        uv_multiplex
+        pidfile
         uv_helpers
-        bmon
-        heap
-        b64
+        uv_multiplex
         """.split()
 
     h2o_includes = """
