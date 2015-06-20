@@ -34,7 +34,7 @@ struct path_parse
 
     main := ('/' key '/'?) |
             ("/key/" key '/'? %getkeys) |
-            ("/key/"  %getkeys);
+            ("/key//"  %getkeys);
 
 }%%
 

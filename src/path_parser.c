@@ -27,7 +27,7 @@ static const char _path_parse_actions[] = {
 
 static const char _path_parse_key_offsets[] = {
 	0, 0, 1, 13, 23, 23, 34, 45, 
-	55, 66, 76
+	55, 65, 75
 };
 
 static const char _path_parse_trans_keys[] = {
@@ -37,20 +37,20 @@ static const char _path_parse_trans_keys[] = {
 	61, 95, 101, 126, 45, 57, 65, 90, 
 	97, 122, 47, 61, 95, 121, 126, 45, 
 	57, 65, 90, 97, 122, 47, 61, 95, 
-	126, 45, 57, 65, 90, 97, 122, 61, 
-	95, 126, 45, 46, 48, 57, 65, 90, 
-	97, 122, 47, 61, 95, 126, 45, 57, 
-	65, 90, 97, 122, 0
+	126, 45, 57, 65, 90, 97, 122, 47, 
+	61, 95, 126, 45, 57, 65, 90, 97, 
+	122, 47, 61, 95, 126, 45, 57, 65, 
+	90, 97, 122, 0
 };
 
 static const char _path_parse_single_lengths[] = {
 	0, 1, 4, 4, 0, 5, 5, 4, 
-	3, 4, 0
+	4, 4, 0
 };
 
 static const char _path_parse_range_lengths[] = {
 	0, 0, 4, 3, 0, 3, 3, 3, 
-	4, 3, 0
+	3, 3, 0
 };
 
 static const char _path_parse_index_offsets[] = {
@@ -64,24 +64,24 @@ static const char _path_parse_indicies[] = {
 	4, 4, 1, 1, 5, 4, 4, 6, 
 	4, 4, 4, 4, 1, 5, 4, 4, 
 	7, 4, 4, 4, 4, 1, 8, 4, 
-	4, 4, 4, 4, 4, 1, 9, 9, 
-	9, 9, 9, 9, 9, 1, 11, 10, 
-	10, 10, 10, 10, 10, 1, 1, 0
+	4, 4, 4, 4, 4, 1, 10, 9, 
+	9, 9, 9, 9, 9, 1, 12, 11, 
+	11, 11, 11, 11, 11, 1, 1, 0
 };
 
 static const char _path_parse_trans_targs[] = {
 	2, 0, 3, 5, 3, 4, 6, 7, 
-	8, 9, 9, 10
+	8, 9, 10, 9, 10
 };
 
 static const char _path_parse_trans_actions[] = {
 	0, 0, 1, 1, 0, 3, 0, 0, 
-	3, 1, 0, 3
+	3, 1, 0, 0, 3
 };
 
 static const char _path_parse_eof_actions[] = {
 	0, 0, 0, 3, 0, 3, 3, 3, 
-	5, 7, 5
+	0, 7, 5
 };
 
 static const int path_parse_start = 1;

@@ -226,7 +226,7 @@ Without a prefix you get all keys.
 
 .. code-block:: bash
 
-   http GET 127.0.0.1/key/
+   http GET 127.0.0.1/key//
 
 .. code-block:: bash
    :class: dotted
