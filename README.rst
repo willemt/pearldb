@@ -87,7 +87,7 @@ You MUST specify a path.
 
 Put
 ---
-We use PUT for creating or updating a key value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when change has been made to disk.
+We use PUT for creating or updating a key value pair. PUTs are `durable <https://en.wikipedia.org/wiki/ACID#Durability>`_ - we only respond when the change has been made to disk.
 
 .. code-block:: bash
 
@@ -158,8 +158,8 @@ You can't PUT under nested resources.
    Connection: keep-alive
    content-length: 0
 
-Put without a key
------------------
+Put without a key (POST)
+------------------------
 If you want PearlDB to generate a key for you, just use POST.
 
 .. code-block:: bash
@@ -237,9 +237,9 @@ Without a prefix you get all keys.
    2
    ...
 
-Existence
----------
-To check for existence use the HEAD method. This is great, because you don't waste bandwidth sending the document body.
+Existence Check
+---------------
+To check for existence use the HEAD method. This is great, because PearlDB doesn't waste bandwidth sending the document body.
 
 .. code-block:: bash
 
