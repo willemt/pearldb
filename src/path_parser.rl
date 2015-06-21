@@ -20,6 +20,7 @@ struct path_parse
     action key_start { fsm->r->key.s = (char*)fpc; }
     action key_end { fsm->r->key.len = (size_t)(fpc - fsm->r->key.s); }
     action getkeys { fsm->r->get_keys = 1; }
+    action allkeys { fsm->r->key.len = 0; }
 
     unreserved  = alnum | "-" | "." | "_" | "~" | "=";
 
@@ -27,7 +28,7 @@ struct path_parse
 
     main := ('/' key '/'?) |
             ("/key/" key '/'? %getkeys) |
-            ("/key//"  %getkeys);
+            ("/key//" %allkeys %getkeys);
 
 }%%
 

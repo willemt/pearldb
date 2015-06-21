@@ -16,19 +16,19 @@ struct path_parse
 };
 
 
-#line 32 "src/path_parser.rl"
+#line 33 "src/path_parser.rl"
 
 
 
 #line 24 "src/path_parser.c"
 static const char _path_parse_actions[] = {
 	0, 1, 0, 1, 1, 1, 2, 2, 
-	1, 2
+	1, 2, 2, 3, 2
 };
 
 static const char _path_parse_key_offsets[] = {
 	0, 0, 1, 13, 23, 23, 34, 45, 
-	55, 65, 75
+	55, 65, 75, 75
 };
 
 static const char _path_parse_trans_keys[] = {
@@ -46,17 +46,17 @@ static const char _path_parse_trans_keys[] = {
 
 static const char _path_parse_single_lengths[] = {
 	0, 1, 4, 4, 0, 5, 5, 4, 
-	4, 4, 0
+	4, 4, 0, 0
 };
 
 static const char _path_parse_range_lengths[] = {
 	0, 0, 4, 3, 0, 3, 3, 3, 
-	3, 3, 0
+	3, 3, 0, 0
 };
 
 static const char _path_parse_index_offsets[] = {
 	0, 0, 2, 11, 19, 20, 29, 38, 
-	46, 54, 62
+	46, 54, 62, 63
 };
 
 static const char _path_parse_indicies[] = {
@@ -67,12 +67,13 @@ static const char _path_parse_indicies[] = {
 	7, 4, 4, 4, 4, 1, 8, 4, 
 	4, 4, 4, 4, 4, 1, 10, 9, 
 	9, 9, 9, 9, 9, 1, 12, 11, 
-	11, 11, 11, 11, 11, 1, 1, 0
+	11, 11, 11, 11, 11, 1, 1, 1, 
+	0
 };
 
 static const char _path_parse_trans_targs[] = {
 	2, 0, 3, 5, 3, 4, 6, 7, 
-	8, 9, 10, 9, 10
+	8, 9, 11, 9, 10
 };
 
 static const char _path_parse_trans_actions[] = {
@@ -82,7 +83,7 @@ static const char _path_parse_trans_actions[] = {
 
 static const char _path_parse_eof_actions[] = {
 	0, 0, 0, 3, 0, 3, 3, 3, 
-	0, 7, 5
+	0, 7, 5, 10
 };
 
 static const int path_parse_start = 1;
@@ -92,19 +93,19 @@ static const int path_parse_error = 0;
 static const int path_parse_en_main = 1;
 
 
-#line 35 "src/path_parser.rl"
+#line 36 "src/path_parser.rl"
 
 static void pp_init(struct path_parse *fsm, parse_result_t* result)
 {
     fsm->r = result;
     fsm->r->get_keys = 0;
     
-#line 103 "src/path_parser.c"
+#line 104 "src/path_parser.c"
 	{
 	 fsm->cs = path_parse_start;
 	}
 
-#line 41 "src/path_parser.rl"
+#line 42 "src/path_parser.rl"
 }
 
 static void pp_execute(struct path_parse *fsm, const char *data, size_t len)
@@ -113,7 +114,7 @@ static void pp_execute(struct path_parse *fsm, const char *data, size_t len)
     const char *pe = data + len;
     const char *eof = data + len;
     
-#line 117 "src/path_parser.c"
+#line 118 "src/path_parser.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -195,7 +196,7 @@ _match:
 #line 21 "src/path_parser.rl"
 	{ fsm->r->key.len = (size_t)(p - fsm->r->key.s); }
 	break;
-#line 199 "src/path_parser.c"
+#line 200 "src/path_parser.c"
 		}
 	}
 
@@ -219,7 +220,11 @@ _again:
 #line 22 "src/path_parser.rl"
 	{ fsm->r->get_keys = 1; }
 	break;
-#line 223 "src/path_parser.c"
+	case 3:
+#line 23 "src/path_parser.rl"
+	{ fsm->r->key.len = 0; }
+	break;
+#line 228 "src/path_parser.c"
 		}
 	}
 	}
@@ -227,7 +232,7 @@ _again:
 	_out: {}
 	}
 
-#line 49 "src/path_parser.rl"
+#line 50 "src/path_parser.rl"
 }
 
 static int pp_finish(struct path_parse *fsm)

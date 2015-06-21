@@ -336,13 +336,20 @@ static int __get_keys(h2o_req_t *req, kstr_t* key)
         mdb_fatal(e);
 
     MDB_val k = { .mv_size = key->len, .mv_data = key->s }, v;
-    /* don't care about output, only setting cursor */
-    e = mdb_cursor_get(gen->curs, &k, &v, MDB_SET);
-    if (0 != e)
-        __get_keys_send(gen, mdb_cursor_get(gen->curs, &k, &v,
-                                            MDB_FIRST), &k, req);
-    else
+
+    e = mdb_cursor_get(gen->curs, &k, &v, MDB_SET_RANGE);
+    switch (e)
+    {
+    case 0:
         __get_keys_send(gen, e, &k, req);
+        break;
+    case MDB_BAD_VALSIZE:
+        e = mdb_cursor_get(gen->curs, &k, &v, MDB_FIRST);
+        __get_keys_send(gen, e, &k, req);
+        break;
+    default:
+        mdb_fatal(e);
+    }
 
     return 0;
 fail:
@@ -499,7 +506,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 
     parse_result_t r;
     int e = parse_path(req->path.base, req->path.len, &r);
-    if (-1 == e || 0 == r.key.len)
+    if (-1 == e)
         return __http_error(req, 400, "BAD PATH");
 
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
