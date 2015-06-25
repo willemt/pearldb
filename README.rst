@@ -38,10 +38,10 @@ Ubuntu Quick Start
    sudo apt-get update
    sudo apt-get install pearldb
 
-Example usage
-=============
+Usage
+=====
 
-All examples below make use of the excellent `httpie <https://github.com/jakubroztocil/httpie>`_
+Examples below make use of the excellent `httpie <https://github.com/jakubroztocil/httpie>`_
 
 Starting
 --------

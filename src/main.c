@@ -38,7 +38,7 @@
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
 #define ANYPORT 65535
-#define UUID4_LEN 24
+#define ID_STR_LEN 24
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
@@ -297,10 +297,8 @@ static void __get_keys_send(get_keys_generator_t *self, int e, MDB_val* k,
     {
         #define SEND_BUFS 2
         h2o_iovec_t body[SEND_BUFS];
-        body[0].base = k->mv_data;
-        body[0].len = k->mv_size;
-        body[1].base = "\n";
-        body[1].len = 1;
+        body[0] = h2o_iovec_init(k->mv_data, k->mv_size);
+        body[1] = h2o_iovec_init("\n", 1);
         h2o_send(req, body, SEND_BUFS, 0);
     }
 }
@@ -401,15 +399,9 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
 
     h2o_iovec_t body;
     if (return_body)
-    {
-        body.base = v.mv_data;
-        body.len = v.mv_size;
-    }
+        body = h2o_iovec_init(v.mv_data, v.mv_size);
     else
-    {
-        body.base = "";
-        body.len = 0;
-    }
+        body = h2o_iovec_init("", 0);
 
     req->res.status = 200;
     req->res.reason = "OK";
@@ -453,7 +445,7 @@ fail:
     return __http_error(req, 400, "BAD");
 }
 
-static void __generate_uuid4(char* uuid4_str)
+static void __generate_uuid4(char* id_str)
 {
     unsigned long int buf[2];
     int i;
@@ -462,36 +454,36 @@ static void __generate_uuid4(char* uuid4_str)
     for (i = 0; i < 4; i++)
         ((unsigned int*)buf)[i] = rand();
 
-    b64_encodes((unsigned char*)&buf, sizeof(buf), uuid4_str + 1, UUID4_LEN);
+    b64_encodes((unsigned char*)&buf, sizeof(buf), id_str + 1, ID_STR_LEN);
 }
 
 static int __post(h2o_req_t *req)
 {
-    char uuid4_str[1 + UUID4_LEN];
+    char id_str[1 + ID_STR_LEN];
 
     batch_item_t item = {
         .flags       = MDB_NOOVERWRITE,
-        .key.mv_data = uuid4_str + 1,
-        .key.mv_size = UUID4_LEN,
+        .key.mv_data = id_str + 1,
+        .key.mv_size = ID_STR_LEN,
         .val.mv_data = req->entity.base,
         .val.mv_size = req->entity.len,
     };
 
     do
     {
-        __generate_uuid4(uuid4_str);
+        __generate_uuid4(id_str);
         int e = bmon_offer(&sv->batch, &item);
         if (-1 == e)
             return __http_error(req, 400, batcher_error);
     }
     while (item.flags == WOULD_OVERWRITE);
 
-    uuid4_str[0] = '/';
+    id_str[0] = '/';
     h2o_add_header(&req->pool,
                    &req->res.headers,
                    H2O_TOKEN_LOCATION,
-                   uuid4_str,
-                   1 + UUID4_LEN);
+                   id_str,
+                   1 + ID_STR_LEN);
     return __http_success(req, 200);
 }
 
@@ -597,7 +589,7 @@ int main(int argc, char **argv)
     }
 
     sv->nworkers = atoi(opts.workers);
-    mdb_db_env_create(&sv->docs, &sv->db_env, 0, opts.path, atoi(opts.db_size));
+    mdb_db_env_create(&sv->db_env, 0, opts.path, atoi(opts.db_size));
     mdb_db_create(&sv->docs, sv->db_env, "docs");
 
     if (opts.stat)

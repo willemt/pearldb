@@ -10,7 +10,6 @@
 void mdb_db_create(MDB_dbi *dbi, MDB_env *env, const char* db_name);
 
 void mdb_db_env_create(
-        MDB_dbi *dbi,
         MDB_env **env,
 	unsigned int flags,
         const char* path,
