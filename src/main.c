@@ -37,7 +37,7 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
-#define VERSION "0.1.0"
+#define VERSION "0.2.0"
 #define ANYPORT 65535
 #define ID_STR_LEN 24
 #define ETAG_PREFIX_LEN 8

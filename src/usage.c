@@ -68,11 +68,11 @@ static const char _params_key_offsets[] = {
 };
 
 static const char _params_trans_keys[] = {
-	45, 97, 98, 100, 104, 105, 112, 115, 
-	116, 118, 119, 98, 100, 104, 112, 118, 
+	45, 72, 80, 98, 100, 104, 105, 112, 
+	115, 118, 119, 98, 100, 104, 112, 118, 
 	119, 97, 116, 99, 104, 95, 112, 101, 
 	114, 105, 111, 100, 0, 0, 0, 45, 
-	97, 98, 100, 105, 112, 115, 116, 119, 
+	72, 80, 98, 100, 105, 112, 115, 119, 
 	98, 100, 104, 112, 119, 97, 98, 101, 
 	109, 111, 110, 105, 122, 101, 0, 95, 
 	115, 105, 122, 101, 0, 0, 0, 111, 
@@ -131,13 +131,13 @@ static const short _params_index_offsets[] = {
 };
 
 static const char _params_trans_targs[] = {
-	2, 45, 14, 27, 74, 54, 59, 33, 
-	39, 81, 68, 0, 3, 19, 71, 42, 
+	2, 39, 45, 14, 27, 74, 54, 59, 
+	33, 81, 68, 0, 3, 19, 71, 42, 
 	75, 62, 0, 4, 0, 5, 0, 6, 
 	0, 7, 0, 8, 0, 9, 0, 10, 
 	0, 11, 0, 12, 0, 13, 0, 14, 
 	0, 15, 0, 0, 16, 87, 16, 18, 
-	45, 14, 27, 54, 59, 33, 39, 68, 
+	39, 45, 14, 27, 54, 59, 33, 68, 
 	0, 3, 19, 36, 42, 62, 0, 20, 
 	28, 0, 21, 0, 22, 0, 23, 0, 
 	24, 0, 25, 0, 26, 0, 27, 0, 
@@ -391,21 +391,21 @@ static void show_usage()
     fprintf(stdout, "pearldb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  pearldb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
+    fprintf(stdout, "  pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]\n");
     fprintf(stdout, "  pearldb stat\n");
     fprintf(stdout, "  pearldb --version\n");
     fprintf(stdout, "  pearldb --help\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Options:\n");
     fprintf(stdout, "  -d --daemonize           Run as a daemon.\n");
-    fprintf(stdout, "  -a --path DB_PATH        Path where database files will be kept [default: store]\n");
-    fprintf(stdout, "  -t --host HOST           Host to listen on [default: 127.0.0.1]\n");
+    fprintf(stdout, "  -P --path DB_PATH        Path where database files will be kept [default: store]\n");
+    fprintf(stdout, "  -H --host HOST           Host to listen on [default: 127.0.0.1]\n");
     fprintf(stdout, "  -p --port PORT           Port to listen on [default: 8888]\n");
     fprintf(stdout, "  -w --workers WORKERS     Number of worker threads [default: 8]\n");
     fprintf(stdout, "  -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]\n");
     fprintf(stdout, "  -s --db_size MEGAS       Size of database in megabytes [default: 1000]\n");
     fprintf(stdout, "  -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]\n");
-    fprintf(stdout, "  -v --version             Display version\n");
+    fprintf(stdout, "  -v --version             Display version.\n");
     fprintf(stdout, "  -h --help                Prints a short usage summary.\n");
     fprintf(stdout, "\n");
 }

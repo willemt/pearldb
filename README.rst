@@ -226,7 +226,7 @@ Without a prefix you get all keys.
 
 .. code-block:: bash
 
-   http GET 127.0.0.1/key//
+   http GET 127.0.0.1/key// | sed -e '/^.*=$/d'
 
 .. code-block:: bash
    :class: dotted
@@ -235,7 +235,6 @@ Without a prefix you get all keys.
    102
    199
    2
-   ...
    x
 
 Existence Check
