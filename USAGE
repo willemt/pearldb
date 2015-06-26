@@ -3,6 +3,7 @@ pearldb - a key value server
 Usage:
   pearldb [--daemonize | -a DB_PATH | -t HOST | -p PORT | -w WORKERS | -b NANOS | -s MEGAS | -i PID_FILE]
   pearldb stat
+  pearldb --version
   pearldb --help
 
 Options:
@@ -14,4 +15,5 @@ Options:
   -b --batch_period NANOS  Number of nano seconds between batch commits [default: 50000]
   -s --db_size MEGAS       Size of database in megabytes [default: 1000]
   -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]
+  -v --version             Display version
   -h --help                Prints a short usage summary.

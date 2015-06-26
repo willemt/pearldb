@@ -37,6 +37,7 @@
 
 #define min(a, b) ((a) < (b) ? (a) : (b))
 
+#define VERSION "0.1.0"
 #define ANYPORT 65535
 #define ID_STR_LEN 24
 #define ETAG_PREFIX_LEN 8
@@ -585,6 +586,11 @@ int main(int argc, char **argv)
     else if (opts.help)
     {
         show_usage();
+        exit(0);
+    }
+    else if (opts.version)
+    {
+        fprintf(stdout, "%s\n", VERSION);
         exit(0);
     }
 
