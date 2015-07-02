@@ -288,19 +288,19 @@ static void __get_keys_close(h2o_generator_t *_self, h2o_req_t *req)
 static void __get_keys_send(get_keys_generator_t *self, int e, MDB_val* k,
                             h2o_req_t *req)
 {
-    if (0 != e || 0 < strncmp(k->mv_data, self->key->s,
+    if (0 == e && 0 >= strncmp(k->mv_data, self->key->s,
                               min(self->key->len, k->mv_size)))
-    {
-        h2o_send(req, NULL, 0, 1);
-        __get_keys_close((h2o_generator_t*)self, req);
-    }
-    else
     {
         #define SEND_BUFS 2
         h2o_iovec_t body[SEND_BUFS];
         body[0] = h2o_iovec_init(k->mv_data, k->mv_size);
         body[1] = h2o_iovec_init("\n", 1);
         h2o_send(req, body, SEND_BUFS, 0);
+    }
+    else
+    {
+        h2o_send(req, NULL, 0, 1);
+        __get_keys_close((h2o_generator_t*)self, req);
     }
 }
 
