@@ -367,7 +367,7 @@ static void show_usage()
     fprintf(stdout, "pearldb - a key value server\n");
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
-    fprintf(stdout, "  pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s MEGAS | -i PID_FILE]\n");
+    fprintf(stdout, "  pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s SIZE | -i PID_FILE]\n");
     fprintf(stdout, "  pearldb stat\n");
     fprintf(stdout, "  pearldb --version\n");
     fprintf(stdout, "  pearldb --help\n");
@@ -378,7 +378,7 @@ static void show_usage()
     fprintf(stdout, "  -H --host HOST           Host to listen on [default: 127.0.0.1]\n");
     fprintf(stdout, "  -p --port PORT           Port to listen on [default: 8888]\n");
     fprintf(stdout, "  -w --workers WORKERS     Number of worker threads [default: 8]\n");
-    fprintf(stdout, "  -s --db_size MEGAS       Size of database in megabytes [default: 1000]\n");
+    fprintf(stdout, "  -s --db_size SIZE        Size of database in megabytes [default: 1000]\n");
     fprintf(stdout, "  -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]\n");
     fprintf(stdout, "  -v --version             Display version.\n");
     fprintf(stdout, "  -h --help                Prints a short usage summary.\n");
