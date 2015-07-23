@@ -39,7 +39,8 @@
 
 #define VERSION "0.2.0"
 #define ANYPORT 65535
-#define ID_STR_LEN 24
+#define UUID4_STR_LEN 24
+#define ID_STR_LEN UUID4_STR_LEN
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
@@ -455,7 +456,7 @@ static void __generate_uuid4(char* id_str)
     for (i = 0; i < 4; i++)
         ((unsigned int*)buf)[i] = rand();
 
-    b64_encodes((unsigned char*)&buf, sizeof(buf), id_str + 1, ID_STR_LEN);
+    b64_encodes((unsigned char*)&buf, sizeof(buf), id_str + 1, UUID4_STR_LEN);
 }
 
 static int __post(h2o_req_t *req)
