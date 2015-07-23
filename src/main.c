@@ -45,6 +45,7 @@
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
 #define WOULD_OVERWRITE MDB_MULTIPLE << 1
+#define BATCH_PERIOD 50000
 
 typedef struct
 {
@@ -619,7 +620,7 @@ int main(int argc, char **argv)
         abort();
 
     bmon_init(&sv->batch,
-              atoi(opts.batch_period),
+              BATCH_PERIOD,
               (void*)__batch_item_cmp,
               __batcher_commit);
 
