@@ -44,6 +44,7 @@ def build(bld):
         b64
         bmon
         container_of
+        h2o_helpers
         heap
         lmdb
         lmdb_helpers

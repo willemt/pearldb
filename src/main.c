@@ -19,6 +19,7 @@
 
 #include "h2o.h"
 #include "h2o/http1.h"
+#include "h2o_helpers.h"
 #include "lmdb.h"
 #include "lmdb_helpers.h"
 #include "kstr.h"
@@ -63,35 +64,6 @@ static int __batch_item_cmp(const batch_item_t* a, const batch_item_t* b,
 
 server_t server;
 server_t *sv = &server;
-
-static int __http_error(h2o_req_t *req, const int status_code,
-                        const char* reason)
-{
-    static h2o_generator_t generator = { NULL, NULL };
-    static h2o_iovec_t body = { .base = "", .len = 0 };
-    req->res.status = status_code;
-    req->res.reason = reason;
-    h2o_add_header(&req->pool,
-                   &req->res.headers,
-                   H2O_TOKEN_CONTENT_LENGTH,
-                   H2O_STRLIT("0"));
-    h2o_start_response(req, &generator);
-    /* force keep-alive */
-    req->http1_is_persistent = 1;
-    h2o_send(req, &body, 1, 1);
-    return 0;
-}
-
-static int __http_success(h2o_req_t *req, const int status_code)
-{
-    static h2o_generator_t generator = { NULL, NULL };
-    static h2o_iovec_t body = { .base = "", .len = 0 };
-    req->res.status = status_code;
-    req->res.reason = "OK";
-    h2o_start_response(req, &generator);
-    h2o_send(req, &body, 1, 1);
-    return 0;
-}
 
 static h2o_iovec_t __get_if_match_header_value(const h2o_req_t* req,
                                                const kstr_t* key)
@@ -247,7 +219,7 @@ static int __put(h2o_req_t *req, kstr_t* key)
     {
         if (sv_etag)
             free(sv_etag);
-        return __http_error(req, 412, "BAD ETAG");
+        return h2oh_respond_with_error(req, 412, "BAD ETAG");
     }
 
     if (sv_etag)
@@ -263,8 +235,8 @@ static int __put(h2o_req_t *req, kstr_t* key)
 
     int e = bmon_offer(&sv->batch, &item);
     if (0 != e)
-        return __http_error(req, 400, batcher_error);
-    return __http_success(req, 200);
+        return h2oh_respond_with_error(req, 400, batcher_error);
+    return h2oh_respond_with_success(req, 200);
 }
 
 typedef struct
@@ -354,7 +326,7 @@ static int __get_keys(h2o_req_t *req, kstr_t* key)
 
     return 0;
 fail:
-    return __http_error(req, 400, "BAD");
+    return h2oh_respond_with_error(req, 400, "BAD");
 }
 
 static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
@@ -378,7 +350,7 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
         e = mdb_txn_commit(txn);
         if (0 != e)
             mdb_fatal(e);
-        return __http_error(req, 404, "NOT FOUND");
+        return h2oh_respond_with_error(req, 404, "NOT FOUND");
     default:
         mdb_fatal(e);
     }
@@ -412,7 +384,7 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
     h2o_send(req, &body, 1, 1);
     return 0;
 fail:
-    return __http_error(req, 400, "BAD");
+    return h2oh_respond_with_error(req, 400, "BAD");
 }
 
 static int __delete(h2o_req_t *req, kstr_t * key)
@@ -434,7 +406,7 @@ static int __delete(h2o_req_t *req, kstr_t * key)
         e = mdb_txn_commit(txn);
         if (0 != e)
             mdb_fatal(e);
-        return __http_error(req, 404, "NOT FOUND");
+        return h2oh_respond_with_error(req, 404, "NOT FOUND");
     default:
         mdb_fatal(e);
     }
@@ -443,9 +415,9 @@ static int __delete(h2o_req_t *req, kstr_t * key)
     if (0 != e)
         mdb_fatal(e);
 
-    return __http_success(req, 200);
+    return h2oh_respond_with_success(req, 200);
 fail:
-    return __http_error(req, 400, "BAD");
+    return h2oh_respond_with_error(req, 400, "BAD");
 }
 
 static void __generate_uuid4(char* id_str)
@@ -477,7 +449,7 @@ static int __post(h2o_req_t *req)
         __generate_uuid4(id_str);
         int e = bmon_offer(&sv->batch, &item);
         if (-1 == e)
-            return __http_error(req, 400, batcher_error);
+            return h2oh_respond_with_error(req, 400, batcher_error);
     }
     while (item.flags == WOULD_OVERWRITE);
 
@@ -487,7 +459,7 @@ static int __post(h2o_req_t *req)
                    H2O_TOKEN_LOCATION,
                    id_str,
                    1 + ID_STR_LEN);
-    return __http_success(req, 200);
+    return h2oh_respond_with_success(req, 200);
 }
 
 static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
@@ -502,7 +474,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
     parse_result_t r;
     int e = parse_path(req->path.base, req->path.len, &r);
     if (-1 == e)
-        return __http_error(req, 400, "BAD PATH");
+        return h2oh_respond_with_error(req, 400, "BAD PATH");
 
     if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("PUT")))
         return __put(req, &r.key);
@@ -517,7 +489,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("DELETE")))
         return __delete(req, &r.key);
 fail:
-    return __http_error(req, 400, "BAD");
+    return h2oh_respond_with_error(req, 400, "BAD");
 }
 
 static void __on_accept(uv_stream_t *listener, const int status)
