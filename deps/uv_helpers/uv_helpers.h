@@ -10,6 +10,6 @@
 /**
  * Bind a listen socket
  * Abort if any failure. */
-void uv_bind_listen_socket(uv_tcp_t* listen, const char* host, const int port);
+void uv_bind_listen_socket(uv_tcp_t* listen, const char* host, const int port, uv_loop_t* loop);
 
 #endif /* UV_HELPERS_H */

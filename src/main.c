@@ -624,9 +624,14 @@ int main(int argc, char **argv)
     handler = h2o_create_handler(pathconf, sizeof(*handler));
     handler->on_req = __dispatch;
 
+    uv_loop_t loop;
+    e = uv_loop_init(&loop);
+    if (0 != e)
+        uv_fatal(e);
+
     uv_tcp_t listen;
 
-    uv_bind_listen_socket(&listen, opts.host, atoi(opts.port));
+    uv_bind_listen_socket(&listen, opts.host, atoi(opts.port), &loop);
 
     sv->threads = calloc(sv->nworkers + 1, sizeof(_thread_t));
     if (!sv->threads)

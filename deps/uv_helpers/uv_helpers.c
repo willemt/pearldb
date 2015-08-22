@@ -5,15 +5,9 @@
 #include "uv.h"
 #include "uv_helpers.h"
 
-void uv_bind_listen_socket(uv_tcp_t* listen, const char* host, const int port)
+void uv_bind_listen_socket(uv_tcp_t* listen, const char* host, const int port, uv_loop_t* loop)
 {
     int e;
-
-    uv_loop_t *loop = uv_default_loop();
-
-    e = uv_loop_init(loop);
-    if (e != 0)
-        uv_fatal(e);
 
     e = uv_tcp_init(loop, listen);
     if (e != 0)
