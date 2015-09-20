@@ -45,6 +45,7 @@
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
+// TODO: assert MDB_MULTIPLE is the highest enum
 #define WOULD_OVERWRITE MDB_MULTIPLE << 1
 #define BATCH_PERIOD 50000
 
