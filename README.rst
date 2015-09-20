@@ -1,7 +1,7 @@
 .. image:: https://img.shields.io/badge/rsttst-testable-brightgreen.svg
    :target: https://github.com/willemt/rsttst
 
-.. image:: http://badges.github.io/stability-badges/dist/experimental.svg
+.. image:: http://badges.github.io/stability-badges/dist/stable.svg
    :target: http://github.com/badges/stability-badges
 
 .. image:: https://travis-ci.org/willemt/pearldb.png
