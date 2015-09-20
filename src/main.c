@@ -128,7 +128,11 @@ static int __get_or_create_etag(const kstr_t* key, const MDB_val *val,
                 goto fail;
 
             ck_ht_entry_set(&entry, hash, my_key, key->len, etag);
+
+            /* CK doesn't support multiple writers */
+            uv_mutex_lock(&sv->etag_lock);
             e = ck_ht_put_spmc(&sv->etags, hash, &entry);
+            uv_mutex_unlock(&sv->etag_lock);
         }
     }
     while (e == 0);
