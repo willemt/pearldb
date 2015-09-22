@@ -26,7 +26,10 @@
 #include "heap.h"
 #include "uv_helpers.h"
 #include "uv_multiplex.h"
+
+/* for coalescing puts via bmon */
 #include "batch_monitor.h"
+
 #include "b64.h"
 #include "ck_ht.h"
 #include "pidfile.h"
@@ -45,7 +48,7 @@
 #define ETAG_PREFIX_LEN 8
 #define ETAG_ID_LEN 20
 #define ETAG_LEN ETAG_PREFIX_LEN + ETAG_ID_LEN
-// TODO: assert MDB_MULTIPLE is the highest enum
+/* TODO: assert MDB_MULTIPLE is the highest enum */
 #define WOULD_OVERWRITE MDB_MULTIPLE << 1
 #define BATCH_PERIOD 50000
 
@@ -215,6 +218,8 @@ static int __batcher_commit(batch_monitor_t* m, batch_queue_t* bq)
     return 0;
 }
 
+/** Put a document into the database at this key
+ * If the "Prefers: ETag" header is set, we perform a CAS operation */
 static int __put(h2o_req_t *req, kstr_t* key)
 {
     char* sv_etag = __remove_stored_etag(key);
@@ -291,6 +296,7 @@ static void __get_keys_proceed(h2o_generator_t *_self, h2o_req_t *req)
     __get_keys_send(self, e, &k, req);
 }
 
+/** Get a list of document keys where the key prefix matches the provided key */
 static int __get_keys(h2o_req_t *req, kstr_t* key)
 {
     get_keys_generator_t *gen = h2o_mem_alloc_pool(&req->pool, sizeof(*gen));
@@ -315,6 +321,7 @@ static int __get_keys(h2o_req_t *req, kstr_t* key)
 
     MDB_val k = { .mv_size = key->len, .mv_data = key->s }, v;
 
+    /* Get documents where the key has a prefix which matches */
     e = mdb_cursor_get(gen->curs, &k, &v, MDB_SET_RANGE);
     switch (e)
     {
@@ -334,6 +341,9 @@ fail:
     return h2oh_respond_with_error(req, 400, "BAD");
 }
 
+/** Get the document corresponding to this key.
+ * If we set the "Prefers: ETag" header, then provide an up-to-date ETag for
+ * this resource. If return_body is set to 1, we respond with the value. */
 static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
 {
     static h2o_generator_t generator = { NULL, NULL };
@@ -392,12 +402,15 @@ fail:
     return h2oh_respond_with_error(req, 400, "BAD");
 }
 
+/** Delete a document using the provided key
+ * @note Delete does not support ETags yet */
 static int __delete(h2o_req_t *req, kstr_t * key)
 {
     int e;
     MDB_txn *txn;
     MDB_val k = { .mv_size = key->len, .mv_data = key->s };
 
+    /* TODO: coalesce deletes using bmon */
     e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
     if (0 != e)
         mdb_fatal(e);
@@ -437,6 +450,9 @@ static void __generate_uuid4(char* id_str)
     b64_encodes((unsigned char*)&buf, sizeof(buf), id_str + 1, UUID4_STR_LEN);
 }
 
+/** Put a new document into the database without having to specify a key.
+ * The key is a randomly generated uuid4 encoded in URL-safe base64. This key
+ * is returned to the client via the Location HTTP header */
 static int __post(h2o_req_t *req)
 {
     char id_str[1 + ID_STR_LEN];
@@ -497,7 +513,7 @@ fail:
     return h2oh_respond_with_error(req, 400, "BAD");
 }
 
-static void __on_accept(uv_stream_t *listener, const int status)
+static void __on_http_connection(uv_stream_t *listener, const int status)
 {
     _thread_t* thread = listener->data;
     int e;
@@ -529,7 +545,8 @@ static void __worker_start(void* uv_tcp)
 
     h2o_context_init(&thread->ctx, listener->loop, &sv->cfg);
 
-    int e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS, __on_accept);
+    int e = uv_listen((uv_stream_t*)listener, MAX_CONNECTIONS,
+                      __on_http_connection);
     if (e != 0)
         uv_fatal(e);
 
@@ -543,20 +560,9 @@ struct ck_malloc __hs_allocators = {
     .free    = (void*)free,
 };
 
-static void __start_multiplex_workers(uv_multiplex_t* m)
-{
-    int i;
-
-    for (i = 0; i < sv->nworkers; i++)
-    {
-        _thread_t* thread = &sv->threads[i + 1];
-        uv_multiplex_worker_create(m, i, thread);
-    }
-}
-
 int main(int argc, char **argv)
 {
-    int e;
+    int e, i;
     options_t opts;
 
     e = parse_options(argc, argv, &opts);
@@ -573,7 +579,6 @@ int main(int argc, char **argv)
         exit(0);
     }
 
-    sv->nworkers = atoi(opts.workers);
     mdb_db_env_create(&sv->db_env, 0, opts.path, atoi(opts.db_size));
     mdb_db_create(&sv->docs, sv->db_env, "docs");
 
@@ -582,24 +587,6 @@ int main(int argc, char **argv)
         mdb_print_db_stats(sv->docs, sv->db_env);
         exit(0);
     }
-
-    srand(time(NULL));
-
-    sv->etag_num = 0;
-    /* ETags are stored in-memory. When we boot we generate a random ETag prefix.
-     * This is done to avoid ETags issued before the reboot being mistaken for
-     * ETags after the reboot */
-    sv->etag_prefix = rand() % (int)(pow(10, ETAG_PREFIX_LEN));
-    uv_mutex_init(&sv->etag_lock);
-    e = ck_ht_init(&sv->etags, CK_HT_MODE_BYTESTRING, NULL, &__hs_allocators,
-                   128, 0);
-    if (!e)
-        abort();
-
-    bmon_init(&sv->batch,
-              BATCH_PERIOD,
-              (void*)__batch_item_cmp,
-              __batcher_commit);
 
     if (opts.daemonize)
     {
@@ -613,6 +600,20 @@ int main(int argc, char **argv)
     else
         signal(SIGPIPE, SIG_IGN);
 
+    srand(time(NULL));
+
+    sv->etag_num = 0;
+
+    /* ETags are stored in-memory. When we boot we generate a random ETag prefix.
+     * This is done to avoid ETags issued before the reboot being mistaken for
+     * ETags after the reboot */
+    sv->etag_prefix = rand() % (int)(pow(10, ETAG_PREFIX_LEN));
+    uv_mutex_init(&sv->etag_lock);
+    e = ck_ht_init(&sv->etags, CK_HT_MODE_BYTESTRING, NULL, &__hs_allocators,
+                   128, 0);
+    if (!e)
+        abort();
+
     h2o_pathconf_t *pathconf;
     h2o_handler_t *handler;
     h2o_hostconf_t *hostconf;
@@ -623,7 +624,9 @@ int main(int argc, char **argv)
                                         h2o_iovec_init(H2O_STRLIT("default")),
                                         ANYPORT);
 
+    /* Create a single endpoint for which we perform all our CRUD operations */
     pathconf = h2o_config_register_path(hostconf, "/");
+
     h2o_chunked_register(pathconf);
 
     handler = h2o_create_handler(pathconf, sizeof(*handler));
@@ -635,18 +638,30 @@ int main(int argc, char **argv)
         uv_fatal(e);
 
     uv_tcp_t listen;
+    uv_multiplex_t m;
 
+    /* Create an HTTP socket which is multiplexed across our worker threads. We
+     * close this socket once it's been multiplexed completely. */
     uv_bind_listen_socket(&listen, opts.host, atoi(opts.port), &loop);
 
+    sv->nworkers = atoi(opts.workers);
+    uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
     sv->threads = calloc(sv->nworkers + 1, sizeof(_thread_t));
     if (!sv->threads)
         exit(-1);
 
-    uv_multiplex_t m;
-    uv_multiplex_init(&m, &listen, IPC_PIPE_NAME, sv->nworkers, __worker_start);
-    __start_multiplex_workers(&m);
+    /* If there are not enough resources to sustain our workers, we abort */
+    for (i = 0; i < sv->nworkers; i++)
+        uv_multiplex_worker_create(&m, i, &sv->threads[i + 1]);
+
     uv_multiplex_dispatch(&m);
 
+    /* Create a thread responsible for coalescing lmdb puts into a single
+     * transaction to amortize disk sync latency */
+    bmon_init(&sv->batch,
+              BATCH_PERIOD,
+              (void*)__batch_item_cmp,
+              __batcher_commit);
     bmon_dispatch(&sv->batch);
 
     while (1)
