@@ -1,4 +1,4 @@
-LIBUV_BRANCH=v1.2.1
+LIBUV_BRANCH=v1.7.4
 LIBH2O_BRANCH=v1.3.1
 
 lets_build_this:
