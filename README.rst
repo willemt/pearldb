@@ -423,6 +423,29 @@ Shutting down
 
    shutdown
 
+Resource over use
+-----------------
+
+If there are not enough resources for our workers, we abort.
+
+.. code-block:: bash
+
+   sudo build/pearl --workers 1000
+
+.. code-block:: bash
+
+    Sorry, please consider increasing file limits
+    There aren't enough file descriptors available.
+
+    Try this:
+
+    Check current limit:
+    	ulimit -n
+
+    Set new limit:
+    	ulimit -n X
+
+    ../deps/uv_multiplex/worker.c:147 - EMFILE: too many open files
 
 Building
 ========
