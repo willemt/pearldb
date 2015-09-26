@@ -450,10 +450,11 @@ If there are not enough resources for our workers, we abort.
 Building
 ========
 
-$ make libuv
+.. code-block:: bash
+   :class: ignore
 
-$ make libh2o
-
-$ make libck
-
-$ make
+   sudo apt-get install git cmake automake libtool libssl-dev
+   make libuv
+   make libh2o
+   make libck
+   make
