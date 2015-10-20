@@ -591,8 +591,6 @@ int main(int argc, char **argv)
     {
         MDB_txn *txn;
 
-        printf("dropping\n");
-
         int e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
         if (0 != e)
             mdb_fatal(e);
