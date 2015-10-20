@@ -9,6 +9,7 @@
 typedef struct
 {
     /* commands */
+    int drop;
     int stat;
 
     /* flags */
@@ -38,17 +39,17 @@ struct params
 };
 
 
-#line 78 "src/usage.rl"
+#line 81 "src/usage.rl"
 
 
 
-#line 46 "src/usage.c"
+#line 47 "src/usage.c"
 static const char _params_actions[] = {
 	0, 1, 0, 1, 3, 1, 4, 1, 
-	5, 1, 6, 2, 1, 7, 2, 1, 
-	8, 2, 1, 9, 2, 1, 10, 2, 
-	1, 11, 2, 1, 12, 2, 2, 0
-	
+	5, 1, 6, 1, 7, 2, 1, 8, 
+	2, 1, 9, 2, 1, 10, 2, 1, 
+	11, 2, 1, 12, 2, 1, 13, 2, 
+	2, 0
 };
 
 static const char _params_key_offsets[] = {
@@ -61,7 +62,7 @@ static const char _params_key_offsets[] = {
 	73, 74, 75, 76, 77, 78, 79, 80, 
 	81, 82, 84, 85, 86, 87, 88, 89, 
 	90, 91, 92, 93, 94, 95, 96, 97, 
-	98, 100, 101
+	98, 99, 100, 101, 102, 105, 106
 };
 
 static const char _params_trans_keys[] = {
@@ -76,8 +77,9 @@ static const char _params_trans_keys[] = {
 	0, 111, 114, 107, 101, 114, 115, 0, 
 	0, 0, 0, 0, 0, 95, 115, 105, 
 	122, 101, 101, 111, 108, 112, 0, 101, 
-	114, 115, 105, 111, 110, 0, 116, 97, 
-	116, 0, 45, 115, 45, 0
+	114, 115, 105, 111, 110, 0, 114, 111, 
+	112, 0, 116, 97, 116, 0, 45, 100, 
+	115, 45, 0
 };
 
 static const char _params_single_lengths[] = {
@@ -90,7 +92,7 @@ static const char _params_single_lengths[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 2, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	2, 1, 0
+	1, 1, 1, 1, 3, 1, 0
 };
 
 static const char _params_range_lengths[] = {
@@ -103,10 +105,10 @@ static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0
+	0, 0, 0, 0, 0, 0, 0
 };
 
-static const unsigned char _params_index_offsets[] = {
+static const short _params_index_offsets[] = {
 	0, 0, 11, 17, 20, 22, 24, 26, 
 	28, 30, 32, 34, 36, 45, 50, 52, 
 	54, 56, 58, 60, 62, 66, 68, 70, 
@@ -116,7 +118,7 @@ static const unsigned char _params_index_offsets[] = {
 	120, 122, 124, 126, 128, 130, 132, 134, 
 	136, 138, 141, 143, 145, 147, 149, 151, 
 	153, 155, 157, 159, 161, 163, 165, 167, 
-	169, 172, 174
+	169, 171, 173, 175, 177, 181, 183
 };
 
 static const char _params_trans_targs[] = {
@@ -124,24 +126,26 @@ static const char _params_trans_targs[] = {
 	67, 46, 0, 3, 57, 20, 61, 40, 
 	0, 4, 52, 0, 5, 0, 6, 0, 
 	7, 0, 8, 0, 9, 0, 10, 0, 
-	11, 0, 73, 0, 13, 17, 23, 11, 
+	11, 0, 77, 0, 13, 17, 23, 11, 
 	32, 37, 49, 46, 0, 3, 14, 20, 
 	40, 0, 15, 0, 16, 0, 17, 0, 
-	18, 0, 0, 19, 73, 19, 21, 26, 
+	18, 0, 0, 19, 77, 19, 21, 26, 
 	35, 0, 22, 0, 23, 0, 24, 0, 
-	0, 25, 73, 25, 27, 0, 28, 0, 
+	0, 25, 77, 25, 27, 0, 28, 0, 
 	29, 0, 30, 0, 31, 0, 32, 0, 
-	33, 0, 0, 34, 73, 34, 36, 0, 
-	37, 0, 38, 0, 0, 39, 73, 39, 
+	33, 0, 0, 34, 77, 34, 36, 0, 
+	37, 0, 38, 0, 0, 39, 77, 39, 
 	41, 0, 42, 0, 43, 0, 44, 0, 
 	45, 0, 46, 0, 47, 0, 0, 48, 
-	73, 48, 50, 0, 0, 51, 73, 51, 
+	77, 48, 50, 0, 0, 51, 77, 51, 
 	53, 0, 54, 0, 55, 0, 56, 0, 
 	49, 0, 58, 15, 0, 59, 0, 60, 
-	0, 74, 0, 62, 0, 63, 0, 64, 
-	0, 65, 0, 66, 0, 67, 0, 74, 
-	0, 69, 0, 70, 0, 71, 0, 74, 
-	0, 1, 68, 0, 12, 0, 0, 0
+	0, 78, 0, 62, 0, 63, 0, 64, 
+	0, 65, 0, 66, 0, 67, 0, 78, 
+	0, 69, 0, 70, 0, 71, 0, 78, 
+	0, 73, 0, 74, 0, 75, 0, 78, 
+	0, 1, 68, 72, 0, 12, 0, 0, 
+	0
 };
 
 static const char _params_trans_actions[] = {
@@ -149,34 +153,36 @@ static const char _params_trans_actions[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 5, 0, 0, 0, 0, 0, 
+	0, 0, 7, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 29, 14, 1, 0, 0, 
+	0, 0, 0, 31, 16, 1, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 29, 17, 1, 0, 0, 0, 0, 
+	0, 31, 19, 1, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 29, 20, 1, 0, 0, 
-	0, 0, 0, 0, 0, 29, 23, 1, 
+	0, 0, 0, 31, 22, 1, 0, 0, 
+	0, 0, 0, 0, 0, 31, 25, 1, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 29, 
-	26, 1, 0, 0, 0, 29, 11, 1, 
+	0, 0, 0, 0, 0, 0, 0, 31, 
+	28, 1, 0, 0, 0, 31, 13, 1, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 7, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0, 9, 
+	0, 9, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 11, 
 	0, 0, 0, 0, 0, 0, 0, 3, 
-	0, 0, 0, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 0, 0, 0, 5, 
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0
 };
 
-static const int params_start = 72;
-static const int params_first_final = 72;
+static const int params_start = 76;
+static const int params_first_final = 76;
 static const int params_error = 0;
 
-static const int params_en_main = 72;
+static const int params_en_main = 76;
 
 
-#line 81 "src/usage.rl"
+#line 84 "src/usage.rl"
 
 static void params_init(struct params *fsm, options_t* opt)
 {
@@ -192,12 +198,12 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->opt->workers = strdup("8");
 
     
-#line 196 "src/usage.c"
+#line 202 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
 
-#line 96 "src/usage.rl"
+#line 99 "src/usage.rl"
 }
 
 static void params_execute(struct params *fsm, const char *data, int len)
@@ -206,7 +212,7 @@ static void params_execute(struct params *fsm, const char *data, int len)
     const char *pe = data + len;
 
     
-#line 210 "src/usage.c"
+#line 216 "src/usage.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -280,64 +286,68 @@ _match:
 		switch ( *_acts++ )
 		{
 	case 0:
-#line 42 "src/usage.rl"
+#line 43 "src/usage.rl"
 	{
         if (fsm->buflen < BUFLEN)
             fsm->buffer[fsm->buflen++] = (*p);
     }
 	break;
 	case 1:
-#line 47 "src/usage.rl"
+#line 48 "src/usage.rl"
 	{
         if (fsm->buflen < BUFLEN)
             fsm->buffer[fsm->buflen++] = 0;
     }
 	break;
 	case 2:
-#line 52 "src/usage.rl"
+#line 53 "src/usage.rl"
 	{ fsm->buflen = 0; }
 	break;
 	case 3:
-#line 54 "src/usage.rl"
-	{ fsm->opt->stat = 1; }
+#line 55 "src/usage.rl"
+	{ fsm->opt->drop = 1; }
 	break;
 	case 4:
-#line 55 "src/usage.rl"
-	{ fsm->opt->daemonize = 1; }
+#line 56 "src/usage.rl"
+	{ fsm->opt->stat = 1; }
 	break;
 	case 5:
-#line 56 "src/usage.rl"
-	{ fsm->opt->help = 1; }
+#line 57 "src/usage.rl"
+	{ fsm->opt->daemonize = 1; }
 	break;
 	case 6:
-#line 57 "src/usage.rl"
-	{ fsm->opt->version = 1; }
+#line 58 "src/usage.rl"
+	{ fsm->opt->help = 1; }
 	break;
 	case 7:
-#line 58 "src/usage.rl"
-	{ fsm->opt->db_size = strdup(fsm->buffer); }
+#line 59 "src/usage.rl"
+	{ fsm->opt->version = 1; }
 	break;
 	case 8:
-#line 59 "src/usage.rl"
-	{ fsm->opt->host = strdup(fsm->buffer); }
+#line 60 "src/usage.rl"
+	{ fsm->opt->db_size = strdup(fsm->buffer); }
 	break;
 	case 9:
-#line 60 "src/usage.rl"
-	{ fsm->opt->path = strdup(fsm->buffer); }
+#line 61 "src/usage.rl"
+	{ fsm->opt->host = strdup(fsm->buffer); }
 	break;
 	case 10:
-#line 61 "src/usage.rl"
-	{ fsm->opt->pid_file = strdup(fsm->buffer); }
+#line 62 "src/usage.rl"
+	{ fsm->opt->path = strdup(fsm->buffer); }
 	break;
 	case 11:
-#line 62 "src/usage.rl"
-	{ fsm->opt->port = strdup(fsm->buffer); }
+#line 63 "src/usage.rl"
+	{ fsm->opt->pid_file = strdup(fsm->buffer); }
 	break;
 	case 12:
-#line 63 "src/usage.rl"
+#line 64 "src/usage.rl"
+	{ fsm->opt->port = strdup(fsm->buffer); }
+	break;
+	case 13:
+#line 65 "src/usage.rl"
 	{ fsm->opt->workers = strdup(fsm->buffer); }
 	break;
-#line 341 "src/usage.c"
+#line 351 "src/usage.c"
 		}
 	}
 
@@ -350,7 +360,7 @@ _again:
 	_out: {}
 	}
 
-#line 104 "src/usage.rl"
+#line 107 "src/usage.rl"
 }
 
 static int params_finish(struct params *fsm)
@@ -369,6 +379,7 @@ static void show_usage()
     fprintf(stdout, "Usage:\n");
     fprintf(stdout, "  pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s SIZE | -i PID_FILE]\n");
     fprintf(stdout, "  pearldb stat\n");
+    fprintf(stdout, "  pearldb drop\n");
     fprintf(stdout, "  pearldb --version\n");
     fprintf(stdout, "  pearldb --help\n");
     fprintf(stdout, "\n");
@@ -382,6 +393,10 @@ static void show_usage()
     fprintf(stdout, "  -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]\n");
     fprintf(stdout, "  -v --version             Display version.\n");
     fprintf(stdout, "  -h --help                Prints a short usage summary.\n");
+    fprintf(stdout, "\n");
+    fprintf(stdout, "Commands:\n");
+    fprintf(stdout, "  stat                     Show statistics\n");
+    fprintf(stdout, "  drop                     Delete database\n");
     fprintf(stdout, "\n");
 }
 

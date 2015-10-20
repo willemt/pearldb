@@ -20,6 +20,8 @@ def configure(conf):
 def build(bld):
     bld.load('clib')
 
+    includes = []
+
     cflags = """
         -g
         -Werror=int-to-pointer-cast
@@ -31,11 +33,17 @@ def build(bld):
 
     lib = ['uv', 'h2o', 'ssl', 'crypto', 'ck']
 
+    libpath = [os.getcwd()]
+
     if sys.platform == 'darwin':
         cflags.extend("""
             -fcolor-diagnostics
             -fdiagnostics-color
             """.split())
+
+        includes.append('/usr/local/opt/openssl/include')
+        libpath.append('/usr/local/opt/openssl/lib')
+
     elif sys.platform.startswith('linux'):
         lib.append('pthread')
         lib.append('rt')
@@ -72,9 +80,9 @@ def build(bld):
         source="""
         src/main.c
         """.split() + bld.clib_c_files(clibs),
-        includes=['./include'] + bld.clib_h_paths(clibs) + h2o_includes + uv_includes + ck_includes,
+        includes=['./include'] + includes + bld.clib_h_paths(clibs) + h2o_includes + uv_includes + ck_includes,
         target='pearl',
         stlibpath=['.'],
-        libpath=[os.getcwd()],
+        libpath=libpath,
         lib=lib,
         cflags=cflags)

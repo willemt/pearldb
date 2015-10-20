@@ -3,6 +3,7 @@ pearldb - a key value server
 Usage:
   pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s SIZE | -i PID_FILE]
   pearldb stat
+  pearldb drop
   pearldb --version
   pearldb --help
 
@@ -16,3 +17,7 @@ Options:
   -i --pid_file PID_FILE   Pid file [default: /var/run/pearl.pid]
   -v --version             Display version.
   -h --help                Prints a short usage summary.
+
+Commands:
+  stat                     Show statistics
+  drop                     Delete database

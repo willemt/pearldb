@@ -587,6 +587,29 @@ int main(int argc, char **argv)
         mdb_print_db_stats(sv->docs, sv->db_env);
         exit(0);
     }
+    else if (opts.drop)
+    {
+        MDB_txn *txn;
+
+        printf("dropping\n");
+
+        int e = mdb_txn_begin(sv->db_env, NULL, 0, &txn);
+        if (0 != e)
+            mdb_fatal(e);
+
+        e = mdb_drop(txn, sv->docs, 1);
+        if (0 != e)
+            mdb_fatal(e);
+
+        e = mdb_txn_commit(txn);
+        if (0 != e)
+            mdb_fatal(e);
+
+        mdb_dbi_close(sv->db_env, sv->docs);
+        mdb_env_close(sv->db_env);
+
+        exit(0);
+    }
 
     if (opts.daemonize)
     {
