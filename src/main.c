@@ -272,7 +272,7 @@ static void __get_keys_send(get_keys_generator_t *self, int e, MDB_val* k,
                             h2o_req_t *req)
 {
     if (0 == e && 0 >= strncmp(k->mv_data, self->key->s,
-                              min(self->key->len, k->mv_size)))
+                               min(self->key->len, k->mv_size)))
     {
         #define SEND_BUFS 2
         h2o_iovec_t body[SEND_BUFS];
@@ -402,7 +402,7 @@ fail:
 }
 
 /** Delete a document using the provided key
- * @note Delete does not support ETags yet */
+* @note Delete does not support ETags yet */
 static int __delete(h2o_req_t *req, kstr_t * key)
 {
     int e;
@@ -484,11 +484,16 @@ static int __post(h2o_req_t *req)
 
 static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
 {
-    if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
+    if (1 == req->path.len)
     {
-        if (1 == req->path.len)
+        if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("POST")))
             return __post(req);
-        goto fail;
+        else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("OPTIONS")))
+        {
+            char* s = "POST,OPTIONS";
+            h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, s, strlen(s));
+            return h2oh_respond_with_success(req, 200);
+        }
     }
 
     parse_result_t r;
@@ -508,6 +513,13 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
         return __get(req, &r.key, 0);
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("DELETE")))
         return __delete(req, &r.key);
+    else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("OPTIONS")))
+    {
+        char* s = "HEAD,GET,PUT,DELETE,OPTIONS";
+        h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, s, strlen(s));
+        return h2oh_respond_with_success(req, 200);
+    }
+
 fail:
     return h2oh_respond_with_error(req, 400, "BAD");
 }

@@ -410,6 +410,38 @@ Notes about ETags:
 - On launch PearlDB generates a random ETag prefix
 - ETags are expected to have a short life (ie. < 1 day)
 
+OPTIONS
+-------
+You can check what HTTP methods are available to a resource using the OPTIONS method. This is useful as some systems like HAProxy use the OPTIONS method as a `healthcheck <http://www.haproxy.com/doc/aloha/7.0/haproxy/healthchecks.html#checking-a-http-service>`_.
+
+.. code-block:: bash
+
+   http -h --ignore-stdin OPTIONS 127.0.0.1/x/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT
+   Server: h2o/1.3.1
+   Connection: keep-alive
+   allow: HEAD,GET,PUT,DELETE,OPTIONS
+   transfer-encoding: chunked
+
+.. code-block:: bash
+
+   http -h --ignore-stdin OPTIONS 127.0.0.1/
+
+.. code-block:: bash
+   :class: dotted
+
+   HTTP/1.1 200 OK
+   Date: ..., ... .... ........ GMT
+   Server: h2o/1.3.1
+   Connection: keep-alive
+   allow: POST,OPTIONS
+   transfer-encoding: chunked
+
 Shutting down
 -------------
 
