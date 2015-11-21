@@ -2,8 +2,8 @@ pearldb - a key value server
 
 Usage:
   pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s SIZE | -i PID_FILE]
-  pearldb stat
-  pearldb drop
+  pearldb stat [-P DB_PATH]
+  pearldb drop [-P DB_PATH]
   pearldb --version
   pearldb --help
 

@@ -32,14 +32,13 @@
 
 #include "b64.h"
 #include "ck_ht.h"
+#include "minmax.h"
 #include "pidfile.h"
 
 #include "local.h"
 
 #include "usage.c"
 #include "path_parser.c"
-
-#define min(a, b) ((a) < (b) ? (a) : (b))
 
 #define VERSION "0.2.0"
 #define ANYPORT 65535

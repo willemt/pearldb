@@ -6,15 +6,17 @@ import unittest
 import time
 
 
+pearl_exe = 'build/pearl'
+pearl_opts = '-P test_store'
 pearl_url = 'http://127.0.0.1:8888'
 
 
 class TestDatabase(unittest.TestCase):
 
     def setUp(self):
-        drop = subprocess.Popen('../build/pearl drop', shell=True, stderr=subprocess.STDOUT)
+        drop = subprocess.Popen('{0} drop {1}'.format(pearl_exe, pearl_opts), shell=True, stderr=subprocess.STDOUT)
         drop.wait()
-        self.pearl_process = subprocess.Popen('../build/pearl', shell=True, stderr=subprocess.STDOUT)
+        self.pearl_process = subprocess.Popen('{0} {1}'.format(pearl_exe, pearl_opts), shell=True, stderr=subprocess.STDOUT)
         time.sleep(0.1)
 
     def tearDown(self):

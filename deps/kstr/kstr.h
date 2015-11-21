@@ -1,9 +1,7 @@
 #ifndef KSTR_H
 #define KSTR_H
 
-#ifndef min
-#define min(a, b) ((a) < (b) ? (a) : (b))
-#endif /* min */
+#include "minmax.h"
 
 typedef struct
 {

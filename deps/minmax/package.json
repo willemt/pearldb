@@ -1,0 +1,11 @@
+{
+  "name": "minmax",
+  "version": "0.0.1",
+  "repo": "willemt/minmax",
+  "description": "min and max functions",
+  "keywords": ["comparison"],
+  "license": "public domain",
+  "src": [
+    "include/minmax.h"
+  ]
+}

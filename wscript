@@ -56,6 +56,7 @@ def build(bld):
         heap
         lmdb
         lmdb_helpers
+        minmax
         pidfile
         uv_helpers
         uv_multiplex

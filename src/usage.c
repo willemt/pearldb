@@ -62,7 +62,8 @@ static const char _params_key_offsets[] = {
 	73, 74, 75, 76, 77, 78, 79, 80, 
 	81, 82, 84, 85, 86, 87, 88, 89, 
 	90, 91, 92, 93, 94, 95, 96, 97, 
-	98, 99, 100, 101, 102, 105, 106
+	98, 100, 101, 102, 103, 104, 105, 106, 
+	107, 108, 109, 110, 111, 114, 115, 115
 };
 
 static const char _params_trans_keys[] = {
@@ -78,8 +79,9 @@ static const char _params_trans_keys[] = {
 	0, 0, 0, 0, 0, 95, 115, 105, 
 	122, 101, 101, 111, 108, 112, 0, 101, 
 	114, 115, 105, 111, 110, 0, 114, 111, 
-	112, 0, 116, 97, 116, 0, 45, 100, 
-	115, 45, 0
+	112, 0, 45, 80, 112, 97, 116, 104, 
+	0, 0, 0, 116, 97, 116, 0, 45, 
+	100, 115, 45, 45, 0
 };
 
 static const char _params_single_lengths[] = {
@@ -92,7 +94,8 @@ static const char _params_single_lengths[] = {
 	1, 1, 1, 1, 1, 1, 1, 1, 
 	1, 2, 1, 1, 1, 1, 1, 1, 
 	1, 1, 1, 1, 1, 1, 1, 1, 
-	1, 1, 1, 1, 3, 1, 0
+	2, 1, 1, 1, 1, 1, 1, 1, 
+	1, 1, 1, 1, 3, 1, 0, 1
 };
 
 static const char _params_range_lengths[] = {
@@ -105,7 +108,8 @@ static const char _params_range_lengths[] = {
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0, 0, 0, 0, 0, 0, 0
+	0, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0, 0, 0, 0, 0
 };
 
 static const short _params_index_offsets[] = {
@@ -118,7 +122,8 @@ static const short _params_index_offsets[] = {
 	120, 122, 124, 126, 128, 130, 132, 134, 
 	136, 138, 141, 143, 145, 147, 149, 151, 
 	153, 155, 157, 159, 161, 163, 165, 167, 
-	169, 171, 173, 175, 177, 181, 183
+	169, 172, 174, 176, 178, 180, 182, 184, 
+	186, 188, 190, 192, 194, 198, 200, 201
 };
 
 static const char _params_trans_targs[] = {
@@ -126,26 +131,28 @@ static const char _params_trans_targs[] = {
 	67, 46, 0, 3, 57, 20, 61, 40, 
 	0, 4, 52, 0, 5, 0, 6, 0, 
 	7, 0, 8, 0, 9, 0, 10, 0, 
-	11, 0, 77, 0, 13, 17, 23, 11, 
+	11, 0, 85, 0, 13, 17, 23, 11, 
 	32, 37, 49, 46, 0, 3, 14, 20, 
 	40, 0, 15, 0, 16, 0, 17, 0, 
-	18, 0, 0, 19, 77, 19, 21, 26, 
+	18, 0, 0, 19, 85, 19, 21, 26, 
 	35, 0, 22, 0, 23, 0, 24, 0, 
-	0, 25, 77, 25, 27, 0, 28, 0, 
+	0, 25, 85, 25, 27, 0, 28, 0, 
 	29, 0, 30, 0, 31, 0, 32, 0, 
-	33, 0, 0, 34, 77, 34, 36, 0, 
-	37, 0, 38, 0, 0, 39, 77, 39, 
+	33, 0, 0, 34, 85, 34, 36, 0, 
+	37, 0, 38, 0, 0, 39, 85, 39, 
 	41, 0, 42, 0, 43, 0, 44, 0, 
 	45, 0, 46, 0, 47, 0, 0, 48, 
-	77, 48, 50, 0, 0, 51, 77, 51, 
+	85, 48, 50, 0, 0, 51, 85, 51, 
 	53, 0, 54, 0, 55, 0, 56, 0, 
 	49, 0, 58, 15, 0, 59, 0, 60, 
-	0, 78, 0, 62, 0, 63, 0, 64, 
-	0, 65, 0, 66, 0, 67, 0, 78, 
-	0, 69, 0, 70, 0, 71, 0, 78, 
-	0, 73, 0, 74, 0, 75, 0, 78, 
-	0, 1, 68, 72, 0, 12, 0, 0, 
-	0
+	0, 86, 0, 62, 0, 63, 0, 64, 
+	0, 65, 0, 66, 0, 67, 0, 86, 
+	0, 69, 0, 70, 0, 71, 0, 87, 
+	0, 73, 77, 0, 74, 0, 75, 0, 
+	76, 0, 77, 0, 78, 0, 0, 79, 
+	87, 79, 81, 0, 82, 0, 83, 0, 
+	87, 0, 1, 68, 80, 0, 12, 0, 
+	0, 72, 0, 0
 };
 
 static const char _params_trans_actions[] = {
@@ -170,16 +177,18 @@ static const char _params_trans_actions[] = {
 	0, 9, 0, 0, 0, 0, 0, 0, 
 	0, 0, 0, 0, 0, 0, 0, 11, 
 	0, 0, 0, 0, 0, 0, 0, 3, 
-	0, 0, 0, 0, 0, 0, 0, 5, 
 	0, 0, 0, 0, 0, 0, 0, 0, 
-	0
+	0, 0, 0, 0, 0, 0, 0, 31, 
+	19, 1, 0, 0, 0, 0, 0, 0, 
+	5, 0, 0, 0, 0, 0, 0, 0, 
+	0, 0, 0, 0
 };
 
-static const int params_start = 76;
-static const int params_first_final = 76;
+static const int params_start = 84;
+static const int params_first_final = 84;
 static const int params_error = 0;
 
-static const int params_en_main = 76;
+static const int params_en_main = 84;
 
 
 #line 84 "src/usage.rl"
@@ -198,7 +207,7 @@ static void params_init(struct params *fsm, options_t* opt)
     fsm->opt->workers = strdup("8");
 
     
-#line 202 "src/usage.c"
+#line 211 "src/usage.c"
 	{
 	 fsm->cs = params_start;
 	}
@@ -212,7 +221,7 @@ static void params_execute(struct params *fsm, const char *data, int len)
     const char *pe = data + len;
 
     
-#line 216 "src/usage.c"
+#line 225 "src/usage.c"
 	{
 	int _klen;
 	unsigned int _trans;
@@ -347,7 +356,7 @@ _match:
 #line 65 "src/usage.rl"
 	{ fsm->opt->workers = strdup(fsm->buffer); }
 	break;
-#line 351 "src/usage.c"
+#line 360 "src/usage.c"
 		}
 	}
 
@@ -378,8 +387,8 @@ static void show_usage()
     fprintf(stdout, "\n");
     fprintf(stdout, "Usage:\n");
     fprintf(stdout, "  pearldb [--daemonize | -P DB_PATH | -H HOST | -p PORT | -w WORKERS | -s SIZE | -i PID_FILE]\n");
-    fprintf(stdout, "  pearldb stat\n");
-    fprintf(stdout, "  pearldb drop\n");
+    fprintf(stdout, "  pearldb stat [-P DB_PATH]\n");
+    fprintf(stdout, "  pearldb drop [-P DB_PATH]\n");
     fprintf(stdout, "  pearldb --version\n");
     fprintf(stdout, "  pearldb --help\n");
     fprintf(stdout, "\n");
