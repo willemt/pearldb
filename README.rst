@@ -48,7 +48,7 @@ Starting
 
 .. code-block:: bash
 
-   sudo build/pearl --daemonize --port 80 --db_size 1
+   build/pearl --daemonize --port 8000 --db_size 1 --pid_file pearl.pid
    echo daemonizing...
 
 .. code-block:: bash
@@ -63,7 +63,7 @@ In this case the key is "x". But we get a 404 if it doesn't exist.
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1/x/
+   http -h --ignore-stdin 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -78,7 +78,7 @@ You MUST specify a path.
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1/ | head -n 1
+   http -h --ignore-stdin 127.0.0.1:8000/ | head -n 1
 
 .. code-block:: bash
    :class: dotted
@@ -91,7 +91,7 @@ We use PUT for creating or updating a key value pair. PUTs are `durable <https:/
 
 .. code-block:: bash
 
-   echo "MY VALUE" | http -h PUT 127.0.0.1/x/
+   echo "MY VALUE" | http -h PUT 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -108,7 +108,7 @@ Now we can finally retrieve our data via a GET:
 
 .. code-block:: bash
 
-   http --ignore-stdin 127.0.0.1/x/
+   http --ignore-stdin 127.0.0.1:8000/x/
 
 .. code-block:: bash
 
@@ -118,7 +118,7 @@ The slash at the end is optional.
 
 .. code-block:: bash
 
-   http --ignore-stdin 127.0.0.1/x
+   http --ignore-stdin 127.0.0.1:8000/x
 
 .. code-block:: bash
 
@@ -130,7 +130,7 @@ The user must specify the capacity of the database upfront. PearlDB does not sup
 
    head -c 1000000 /dev/urandom | base64 > tmp_file
    du -h tmp_file | awk '{ print $1 }'
-   cat tmp_file | http -h PUT 127.0.0.1/1/
+   cat tmp_file | http -h PUT 127.0.0.1:8000/1/
    rm tmp_file
 
 .. code-block:: bash
@@ -147,7 +147,7 @@ You can't PUT under nested resources.
 
 .. code-block:: bash
 
-   echo 'DATA' | http -h PUT 127.0.0.1/x/nested_resource/
+   echo 'DATA' | http -h PUT 127.0.0.1:8000/x/nested_resource/
 
 .. code-block:: bash
    :class: dotted
@@ -164,7 +164,7 @@ If you want PearlDB to generate a key for you, just use POST.
 
 .. code-block:: bash
 
-   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/ > posted.txt
+   echo "MY POSTED VALUE" | http -h POST 127.0.0.1:8000/ > posted.txt
    cat posted.txt
 
 .. code-block:: bash
@@ -181,7 +181,7 @@ The Location header in the response has the URI of the newly created resource. T
 
 .. code-block:: bash
 
-   http --ignore-stdin -b GET 127.0.0.1$(grep location: posted.txt | sed -e 's/location: //' | tr -d '\r\n')
+   http --ignore-stdin -b GET 127.0.0.1:8000$(grep location: posted.txt | sed -e 's/location: //' | tr -d '\r\n')
 
 .. code-block:: bash
    :class: dotted
@@ -192,7 +192,7 @@ Providing a URL (ie. key) with POST doesn't make sense, and will result in a 400
 
 .. code-block:: bash
 
-   echo "MY POSTED VALUE" | http -h POST 127.0.0.1/xxxx/
+   echo "MY POSTED VALUE" | http -h POST 127.0.0.1:8000/xxxx/
 
 .. code-block:: bash
    :class: dotted
@@ -209,11 +209,11 @@ You can get the keys that match a prefix by using the /key/XXX/ nested resource.
 
 .. code-block:: bash
 
-   echo '' | http PUT 127.0.0.1/1/ > /dev/null
-   echo '' | http PUT 127.0.0.1/199/ > /dev/null
-   echo '' | http PUT 127.0.0.1/102/ > /dev/null
-   echo '' | http PUT 127.0.0.1/2/ > /dev/null
-   http GET 127.0.0.1/key/1/
+   echo '' | http PUT 127.0.0.1:8000/1/ > /dev/null
+   echo '' | http PUT 127.0.0.1:8000/199/ > /dev/null
+   echo '' | http PUT 127.0.0.1:8000/102/ > /dev/null
+   echo '' | http PUT 127.0.0.1:8000/2/ > /dev/null
+   http GET 127.0.0.1:8000/key/1/
 
 .. code-block:: bash
    :class: dotted
@@ -226,7 +226,7 @@ Without a prefix you get all keys.
 
 .. code-block:: bash
 
-   http GET 127.0.0.1/key// | sed -e '/^.*=$/d'
+   http GET 127.0.0.1:8000/key// | sed -e '/^.*=$/d'
 
 .. code-block:: bash
    :class: dotted
@@ -243,7 +243,7 @@ To check for existence use the HEAD method. This is great, because PearlDB doesn
 
 .. code-block:: bash
 
-   http -h --ignore-stdin HEAD 127.0.0.1/x/
+   http -h --ignore-stdin HEAD 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -259,7 +259,7 @@ DELETEs are durable - we only respond when the change has been made to disk.
 
 .. code-block:: bash
 
-   http -h --ignore-stdin DELETE 127.0.0.1/x/
+   http -h --ignore-stdin DELETE 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -274,7 +274,7 @@ Of course, after a DELETE the key doesn't exist anymore:
 
 .. code-block:: bash
 
-   http -h --ignore-stdin 127.0.0.1/x/
+   http -h --ignore-stdin 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -295,8 +295,8 @@ Imagine two clients trying to update the same key. Client 1 requests an ETag. Th
 
 .. code-block:: bash
 
-   echo 'SWEET DATA' | http -h --ignore-stdin PUT 127.0.0.1/x/ > /dev/null
-   http -h --ignore-stdin GET 127.0.0.1/x/ Prefers:ETag > etag.txt
+   echo 'SWEET DATA' | http -h --ignore-stdin PUT 127.0.0.1:8000/x/ > /dev/null
+   http -h --ignore-stdin GET 127.0.0.1:8000/x/ Prefers:ETag > etag.txt
    cat etag.txt
 
 .. code-block:: bash
@@ -313,7 +313,7 @@ If client 1 requests an ETag again, the same ETag is sent:
 
 .. code-block:: bash
 
-   http -h --ignore-stdin GET 127.0.0.1/x/ Prefers:ETag > etag2.txt
+   http -h --ignore-stdin GET 127.0.0.1:8000/x/ Prefers:ETag > etag2.txt
    cat etag2.txt
    diff <(grep etag etag.txt) <(grep etag etag2.txt)
 
@@ -331,7 +331,7 @@ Client 2 does a PUT on x. This will invalidate the ETag.
 
 .. code-block:: bash
 
-   echo 'SURPRISE' | http -h PUT 127.0.0.1/x/
+   echo 'SURPRISE' | http -h PUT 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -346,7 +346,7 @@ Client 1 uses a conditional PUT to update "x" using the If-Match tag. Because th
 
 .. code-block:: bash
 
-   echo 'MY NEW VALUE BASED OFF OLD VALUE' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag.txt | sed -e 's/etag: //' | tr -d '\r\n')
+   echo 'MY NEW VALUE BASED OFF OLD VALUE' | http -h PUT 127.0.0.1:8000/x/ If-Match:$(grep etag: etag.txt | sed -e 's/etag: //' | tr -d '\r\n')
 
 .. code-block:: bash
    :class: dotted
@@ -361,7 +361,7 @@ Once this happens we can retry the PUT after we do a new GET.
 
 .. code-block:: bash
 
-   http -h GET 127.0.0.1/x/ Prefers:ETag > etag3.txt
+   http -h GET 127.0.0.1:8000/x/ Prefers:ETag > etag3.txt
    cat etag3.txt
 
 .. code-block:: bash
@@ -378,7 +378,7 @@ The PUT will succeed because the ETag is still valid.
 
 .. code-block:: bash
 
-   echo 'NEW VALUE' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
+   echo 'NEW VALUE' | http -h PUT 127.0.0.1:8000/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
 
 .. code-block:: bash
    :class: dotted
@@ -393,7 +393,7 @@ However, if we use the ETag again it will fail.
 
 .. code-block:: bash
 
-   echo 'NEW VALUE2' | http -h PUT 127.0.0.1/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
+   echo 'NEW VALUE2' | http -h PUT 127.0.0.1:8000/x/ If-Match:$(grep etag: etag3.txt | sed -e 's/etag: //' | tr -d '\r\n')
 
 .. code-block:: bash
    :class: dotted
@@ -416,7 +416,7 @@ You can check what HTTP methods are available to a resource using the OPTIONS me
 
 .. code-block:: bash
 
-   http -h --ignore-stdin OPTIONS 127.0.0.1/x/
+   http -h --ignore-stdin OPTIONS 127.0.0.1:8000/x/
 
 .. code-block:: bash
    :class: dotted
@@ -430,7 +430,7 @@ You can check what HTTP methods are available to a resource using the OPTIONS me
 
 .. code-block:: bash
 
-   http -h --ignore-stdin OPTIONS 127.0.0.1/
+   http -h --ignore-stdin OPTIONS 127.0.0.1:8000/
 
 .. code-block:: bash
    :class: dotted
@@ -447,7 +447,7 @@ Shutting down
 
 .. code-block:: bash
 
-   cat /var/run/pearl.pid | sudo xargs kill -9
+   cat pearl.pid | xargs kill -9
    echo shutdown
 
 .. code-block:: bash
