@@ -70,8 +70,8 @@ In this case the key is "x". But we get a 404 if it doesn't exist.
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 You MUST specify a path.
@@ -98,8 +98,8 @@ We use PUT for creating or updating a key value pair. PUTs are `durable <https:/
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    transfer-encoding: chunked
 
 PUTs have an immediate change on the resource. There is full `isolation <https://en.wikipedia.org/wiki/ACID#Isolation>`_, and therefore no `dirty reads <http://en.wikipedia.org/wiki/Isolation_(database_systems)#Dirty_reads>`_.
@@ -139,8 +139,8 @@ The user must specify the capacity of the database upfront. PearlDB does not sup
    1.3M
    HTTP/1.1 400 NOT ENOUGH SPACE
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 You can't PUT under nested resources.
@@ -154,8 +154,8 @@ You can't PUT under nested resources.
 
    HTTP/1.1 400 BAD PATH
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 Put without a key (POST)
@@ -172,8 +172,8 @@ If you want PearlDB to generate a key for you, just use POST.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    location: ...
    transfer-encoding: chunked
 
@@ -199,8 +199,8 @@ Providing a URL (ie. key) with POST doesn't make sense, and will result in a 400
 
    HTTP/1.1 400 BAD
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 Get keys
@@ -250,8 +250,8 @@ To check for existence use the HEAD method. This is great, because PearlDB doesn
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
 
 Delete
 ------
@@ -266,8 +266,8 @@ DELETEs are durable - we only respond when the change has been made to disk.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    transfer-encoding: chunked
 
 Of course, after a DELETE the key doesn't exist anymore:
@@ -281,8 +281,8 @@ Of course, after a DELETE the key doesn't exist anymore:
 
    HTTP/1.1 404 NOT FOUND
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 Compare and Swap (CAS)
@@ -304,8 +304,8 @@ Imagine two clients trying to update the same key. Client 1 requests an ETag. Th
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    etag: ...
    transfer-encoding: chunked
 
@@ -322,8 +322,8 @@ If client 1 requests an ETag again, the same ETag is sent:
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    etag: ...
    transfer-encoding: chunked
 
@@ -338,8 +338,8 @@ Client 2 does a PUT on x. This will invalidate the ETag.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    transfer-encoding: chunked
 
 Client 1 uses a conditional PUT to update "x" using the If-Match tag. Because the ETag was invalidated, we don't commit, and respond with 412 Precondition Failed.
@@ -353,8 +353,8 @@ Client 1 uses a conditional PUT to update "x" using the If-Match tag. Because th
 
    HTTP/1.1 412 BAD ETAG
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 Once this happens we can retry the PUT after we do a new GET.
@@ -369,8 +369,8 @@ Once this happens we can retry the PUT after we do a new GET.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    etag: ...
    transfer-encoding: chunked
 
@@ -385,8 +385,8 @@ The PUT will succeed because the ETag is still valid.
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    transfer-encoding: chunked
 
 However, if we use the ETag again it will fail.
@@ -400,8 +400,8 @@ However, if we use the ETag again it will fail.
 
    HTTP/1.1 412 BAD ETAG
    Date: ..., ... .... ........ GMT 
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    content-length: 0
 
 Notes about ETags:
@@ -423,8 +423,8 @@ You can check what HTTP methods are available to a resource using the OPTIONS me
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    allow: HEAD,GET,PUT,DELETE,OPTIONS
    transfer-encoding: chunked
 
@@ -437,8 +437,8 @@ You can check what HTTP methods are available to a resource using the OPTIONS me
 
    HTTP/1.1 200 OK
    Date: ..., ... .... ........ GMT
-   Server: h2o/1.3.1
    Connection: keep-alive
+   Server: h2o/2.2.4
    allow: POST,OPTIONS
    transfer-encoding: chunked
 

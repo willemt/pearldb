@@ -381,9 +381,13 @@ static int __get(h2o_req_t *req, kstr_t* key, const int return_body)
         if (-1 == e)
             goto fail;
 
-        h2o_add_header(&req->pool, &req->res.headers,
-                       H2O_TOKEN_ETAG,
-                       etag.base, etag.len);
+        h2o_add_header(
+            &req->pool,
+            &req->res.headers,
+            H2O_TOKEN_ETAG,
+            NULL,
+            etag.base,
+            etag.len);
     }
 
     h2o_iovec_t body;
@@ -477,6 +481,7 @@ static int __post(h2o_req_t *req)
     h2o_add_header(&req->pool,
                    &req->res.headers,
                    H2O_TOKEN_LOCATION,
+                   NULL,
                    id_str,
                    1 + ID_STR_LEN);
     return h2oh_respond_with_success(req, 200);
@@ -491,7 +496,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
         else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("OPTIONS")))
         {
             char* s = "POST,OPTIONS";
-            h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, s, strlen(s));
+            h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, NULL, s, strlen(s));
             return h2oh_respond_with_success(req, 200);
         }
     }
@@ -516,7 +521,7 @@ static int __dispatch(h2o_handler_t * self, h2o_req_t *req)
     else if (h2o_memis(req->method.base, req->method.len, H2O_STRLIT("OPTIONS")))
     {
         char* s = "HEAD,GET,PUT,DELETE,OPTIONS";
-        h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, s, strlen(s));
+        h2o_add_header(&req->pool, &req->res.headers, H2O_TOKEN_ALLOW, NULL, s, strlen(s));
         return h2oh_respond_with_success(req, 200);
     }
 
@@ -544,7 +549,12 @@ static void __on_http_connection(uv_stream_t *listener, const int status)
 
     h2o_socket_t *sock =
         h2o_uv_socket_create((uv_stream_t*)conn, (uv_close_cb)free);
-    h2o_http1_accept(&thread->ctx, sv->cfg.hosts, sock);
+
+    struct timeval connected_at = *h2o_get_timestamp(&thread->ctx, NULL, NULL);
+
+    thread->accept_ctx.ctx = &thread->ctx;
+    thread->accept_ctx.hosts = sv->cfg.hosts;
+    h2o_http1_accept(&thread->accept_ctx, sock, connected_at);
 }
 
 static void __worker_start(void* uv_tcp)
@@ -657,7 +667,7 @@ int main(int argc, char **argv)
                                         ANYPORT);
 
     /* Create a single endpoint for which we perform all our CRUD operations */
-    pathconf = h2o_config_register_path(hostconf, "/");
+    pathconf = h2o_config_register_path(hostconf, "/", 0);
 
     h2o_chunked_register(pathconf);
 

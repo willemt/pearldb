@@ -13,6 +13,7 @@
 typedef struct
 {
     h2o_context_t ctx;
+    h2o_accept_ctx_t accept_ctx;
 } _thread_t;
 
 typedef struct
